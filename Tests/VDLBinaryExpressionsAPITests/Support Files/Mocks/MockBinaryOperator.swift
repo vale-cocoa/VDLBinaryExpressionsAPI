@@ -1,11 +1,13 @@
 //
+//  VDLBinaryExpressionsAPI
 //  MockBinaryOperator.swift
 //  
 //
-//  Created by Valeriano Della Longa on 07/02/2020.
+//  Created by Valeriano Della Longa on 06/02/2020.
+//  Copyright (c) 2020 Valeriano Della Longa
 //
-
 import Foundation
+import XCTest
 @testable import VDLBinaryExpressionsAPI
 
 extension Int: RepresentableAsEmptyProtocol {
