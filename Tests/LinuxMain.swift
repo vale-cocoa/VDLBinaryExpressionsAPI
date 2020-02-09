@@ -1,7 +1,7 @@
 import XCTest
 
-import PostfixExpressionBuilderTests
+import VDLBinaryExpressionsAPI
 
 var tests = [XCTestCaseEntry]()
-tests += PostfixExpressionBuilderTests.allTests()
+tests += VDLBinaryExpressionsAPI.allTests()
 XCTMain(tests)

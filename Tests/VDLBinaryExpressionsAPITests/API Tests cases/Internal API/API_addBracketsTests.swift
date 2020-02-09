@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import PostfixExpressionBuilder
+@testable import VDLBinaryExpressionsAPI
 
 final class API_addBracketsTests: XCTestCase {
     typealias Token = BinaryOperatorExpressionToken<MockBinaryOperator>

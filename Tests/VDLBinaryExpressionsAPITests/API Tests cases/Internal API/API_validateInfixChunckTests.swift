@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import PostfixExpressionBuilder
+@testable import VDLBinaryExpressionsAPI
 
 final class API_validateInfixChunckTests: XCTestCase {
     typealias Token = BinaryOperatorExpressionToken<MockBinaryOperator>

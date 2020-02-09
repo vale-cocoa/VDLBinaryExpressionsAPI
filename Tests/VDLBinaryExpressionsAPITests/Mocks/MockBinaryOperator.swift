@@ -6,7 +6,7 @@
 //
 
 import Foundation
-@testable import PostfixExpressionBuilder
+@testable import VDLBinaryExpressionsAPI
 
 extension Int: RepresentableAsEmptyProtocol {
     public static func empty() -> Int {

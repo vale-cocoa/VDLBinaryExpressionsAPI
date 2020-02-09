@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import PostfixExpressionBuilder
+@testable import VDLBinaryExpressionsAPI
 
 final class BinaryOperatorExpressionTokenTests: XCTestCase {
     // MARK: - Properties
