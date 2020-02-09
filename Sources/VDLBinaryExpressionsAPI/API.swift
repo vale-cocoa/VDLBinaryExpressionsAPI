@@ -470,4 +470,3 @@ func _addBracketsIfNeeded<T: BinaryOperatorProtocol>(subInfix: _SubInfixExpressi
     return (expression: newInfix, mainOperator: subInfix.mainOperator)
 }
 
-
