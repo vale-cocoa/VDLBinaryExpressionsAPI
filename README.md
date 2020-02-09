@@ -1,6 +1,6 @@
-# PostfixExpressionBuilder
+# VDLBinaryExpressionsAPI
 
-An API for building, validate and evaluate associative binary operation expressions in Reverse Polish Notation (a.k.a. postfix notation).
+An API for working with associative binary operation expressions.
 
 - todo: 
     1) all missing test cases for API functions.
