@@ -1,10 +1,11 @@
 //
+//  VDLBinaryExpressionsAPI
 //  API.swift
 //
 //
 //  Created by Valeriano Della Longa on 06/02/2020.
+//  Copyright (c) 2020 Valeriano Della Longa
 //
-
 // MARK: - Public API
 /// Error thrown by  API when validating and/or evaluating binary operation expressions in either postfix or infix notation.
 public enum BinaryExpressionError: Error {

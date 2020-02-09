@@ -1,10 +1,11 @@
 //
+//  VDLBinaryExpressionsAPI
 //  BinaryOperatorExpressionToken.swift
 //  
 //
 //  Created by Valeriano Della Longa on 06/02/2020.
+//  Copyright (c) 2020 Valeriano Della Longa
 //
-
 import Foundation
 
 /// An enum for representing tokens in a binary operation expression.
