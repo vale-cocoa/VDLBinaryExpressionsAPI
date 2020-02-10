@@ -34,9 +34,20 @@ would be the postfix representation for the bracketed verision *(A + B) * C*.
 This notation can be easily evaluated by a compiutational systems by using a stack.
 
 ## General API description
-The public API add functionalities to `Collection` providing instance methods for:
+The public API add functionalities to `Collection<BinaryOperatorExpressionToken<T>>` providing instance methods for:
 
-1. validating its content as an associative binary operation expression in either infix or postfix expression; 
-2. combining into a postfix expression its content via an operation with another expression; 
-3. evaluation of its content into the result for the represented expression.
+* validation/conversion of its content to an expression in either infix or postfix expression via:
+    * `validInfix()` 
+    * `validPostfix`
+* combination into a postfix expression of its content via an operation with another expression via `postfixCombining(using:with:)`
+* evaluation of its content into the result for the represented expression via `evaluate()`
+
+### Building blocks
+As mentioned before this API introduces instance methods on `Collection` with an `Element` of type `BinaryExpressionToken<T>`, which is the basic bulding block for these expressions.
+`BinaryExpressionToken<T>` is a generic `enum` which provides all the cases a token in a binary expression could be:
+* `.operand(T.Operand)`: an operand
+* `binaryOperator(T)`: an operator
+* `openingBracket`: an opening bracket
+* `closingBracket`: a closing bracket
+The generic `T` type used to specialize this generic `enum` must conform to `BinaryOperatorProtocol<Operand>`, a `protocol` which defines how an operator works on its associated type `Operand`, its priority and its kind of associativty. 
 
