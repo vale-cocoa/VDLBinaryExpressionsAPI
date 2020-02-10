@@ -160,6 +160,7 @@ final class API_evaluateTests: XCTestCase {
         ("test_whenEvalShouldThrowOnFailingOperationThrows_ErrorThrownIsTheOperationOne", test_whenEvalShouldThrowOnFailingOperationThrows_ErrorThrownIsTheOperationOne),
        ("test_whenValidPostfixReturnsValue_doesntThrow", test_whenValidPostfixReturnsValue_doesntThrow),
        ("test_whenEvalShouldThrowOnFailingOperationReturnsNil_returnsEmptyValue", test_whenEvalShouldThrowOnFailingOperationReturnsNil_returnsEmptyValue),
+        ("test_whenEvalShouldThrowOnFailingOperationReturnsValue_returnsSameValue", test_whenEvalShouldThrowOnFailingOperationReturnsValue_returnsSameValue),
         
     ]
 }
