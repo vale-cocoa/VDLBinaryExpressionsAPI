@@ -6,6 +6,7 @@
 //  Created by Valeriano Della Longa on 06/02/2020.
 //  Copyright (c) 2020 Valeriano Della Longa
 //
+
 import Foundation
 /// A protocol for representing a Type which has an empty value.
 public protocol RepresentableAsEmptyProtocol {

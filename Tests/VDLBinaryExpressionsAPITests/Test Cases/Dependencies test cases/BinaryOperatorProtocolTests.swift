@@ -6,6 +6,7 @@
 //  Created by Valeriano Della Longa on 06/02/2020.
 //  Copyright (c) 2020 Valeriano Della Longa
 //
+
 import XCTest
 @testable import VDLBinaryExpressionsAPI
 
@@ -65,7 +66,7 @@ final class BinaryOperatorProtocolTests: XCTestCase {
         for aCase in MockBinaryOperator.allCases {
             sut = aCase
             // when
-            let others = MockBinaryOperator.allCases.filter { ($0 != .add && $0.associativity == .left) }
+            let others = MockBinaryOperator.allCases.filter { ($0 != aCase && $0.associativity == .left) }
             for other in others {
                 let result = sut.hasPrecedenceInPostfixConversion(then: other)
                 // then
@@ -80,7 +81,7 @@ final class BinaryOperatorProtocolTests: XCTestCase {
         for aCase in MockBinaryOperator.allCases {
             sut = aCase
             // when
-            let others = MockBinaryOperator.allCases.filter { ($0 != .add && $0.associativity == .right) }
+            let others = MockBinaryOperator.allCases.filter { ($0 != aCase && $0.associativity == .right) }
             for other in others {
                 let result = sut.hasPrecedenceInPostfixConversion(then: other)
                 // then

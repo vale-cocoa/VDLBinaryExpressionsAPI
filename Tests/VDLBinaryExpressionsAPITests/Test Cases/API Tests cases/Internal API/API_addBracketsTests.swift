@@ -6,6 +6,7 @@
 //  Created by Valeriano Della Longa on 06/02/2020.
 //  Copyright (c) 2020 Valeriano Della Longa
 //
+
 import XCTest
 @testable import VDLBinaryExpressionsAPI
 
@@ -14,6 +15,18 @@ final class API_addBracketsTests: XCTestCase {
     
     // MARK: - properties
     var sut: _SubInfixExpression<MockBinaryOperator>!
+    
+    // MARK: - Test lifecycle
+    override func setUp() {
+        super.setUp()
+        
+    }
+    
+    override func tearDown() {
+        self.sut = nil
+        
+        super.tearDown()
+    }
     
     // MARK: - Given
     func givenWhenNotValid() -> [() -> Void] {
@@ -68,19 +81,6 @@ final class API_addBracketsTests: XCTestCase {
     
     func whenExpressionValidInfixAndMainOperatorAdd() {
         sut = _SubInfixExpression<MockBinaryOperator>(expression: [.operand(10), .binaryOperator(.add), .operand(5)], mainOperator: .add)
-    }
-    
-    // MARK: - Test lifecycle
-    override func setUp() {
-        super.setUp()
-        
-        
-    }
-    
-    override func tearDown() {
-        self.sut = nil
-        
-        super.tearDown()
     }
     
     // MARK: - Tests

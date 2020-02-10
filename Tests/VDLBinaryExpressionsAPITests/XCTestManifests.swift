@@ -12,6 +12,12 @@ public func allTests() -> [XCTestCaseEntry] {
         testCase(API_validateInfixChunckTests.allTests),
         testCase(API_convertToRPNTests.allTests),
         testCase(API_convertFromRPNToInfixTests.allTests),
+        testCase(API_isValidInfixNotationTests.allTests),
+        testCase(API_isValidPostfixNotationTests.allTests),
+        testCase(API_evaluateTests.allTests),
+        testCase(API_postfixCombiningTests.allTests),
+        testCase(API_validInfixTests.allTests),
+        testCase(API_validPostfixTests.allTests),
         
     ]
 }

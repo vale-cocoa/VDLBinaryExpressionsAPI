@@ -6,12 +6,14 @@
 //  Created by Valeriano Della Longa on 06/02/2020.
 //  Copyright (c) 2020 Valeriano Della Longa
 //
+
 import XCTest
 @testable import VDLBinaryExpressionsAPI
 
 final class BinaryOperatorExpressionTokenTests: XCTestCase {
+    typealias Token = BinaryOperatorExpressionToken<MockBinaryOperator>
     // MARK: - Properties
-    var sut: BinaryOperatorExpressionToken<MockBinaryOperator>!
+    var sut: Token!
     
     // MARK: - Lifecycle
     override func setUp() {

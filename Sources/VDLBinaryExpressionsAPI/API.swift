@@ -6,6 +6,9 @@
 //  Created by Valeriano Della Longa on 06/02/2020.
 //  Copyright (c) 2020 Valeriano Della Longa
 //
+
+import Foundation
+
 // MARK: - Public API
 /// Error thrown by  API when validating and/or evaluating binary operation expressions in either postfix or infix notation.
 public enum BinaryExpressionError: Error {
@@ -16,7 +19,7 @@ public enum BinaryExpressionError: Error {
 extension Collection {
     /// Validates as a binary operation expression —if possible— in postfix notation.
     ///
-    /// - returns: either an `Array` of `BinaryOperatorExpressionToken` ordered as a valid binary operation expression in postfix notation, or `nil` if the represented expression was not valid in either infix or postfix notations.
+    /// - returns: either an `Array` of `BinaryOperatorExpressionToken` ordered as a valid binary operation expression in postfix notation, or `nil` if the expression is not valid in either infix or postfix notations.
     public func validPostfix<T: BinaryOperatorProtocol>() -> [Self.Iterator.Element]?
         where Self.Iterator.Element == BinaryOperatorExpressionToken<T>
     {
@@ -30,7 +33,7 @@ extension Collection {
     
     /// Validates as a binary operation expression —if possible— in infix notation.
     ///
-    /// - returns: either an `Array` of `BinaryOperatorExpressionToken` ordered as a valid binary expression in infix notation, or `nil` if the represented expression was not valid in either infix or postfix notations.
+    /// - returns: either an `Array` of `BinaryOperatorExpressionToken` ordered as a valid binary expression in infix notation, or `nil` if the expression is not valid in either infix or postfix notations.
     public func validInfix<T: BinaryOperatorProtocol>() -> [Self.Iterator.Element]?
         where Self.Iterator.Element == BinaryOperatorExpressionToken<T>
     {
@@ -77,7 +80,8 @@ extension Collection {
     
 }
 
-// MARK: - Helpers
+// MARK: - Internal API
+// MARK: - Notation validation helpers
 func _isValidInfixNotation<C: Collection, T: BinaryOperatorProtocol>(expression: C) -> Bool
     where C.Iterator.Element == BinaryOperatorExpressionToken<T>
 {
@@ -85,11 +89,14 @@ func _isValidInfixNotation<C: Collection, T: BinaryOperatorProtocol>(expression:
         !expression.isEmpty
         else { return true }
     
-    guard
-        let _ = try? _convertToRPN(infixExpression: expression)
-        else { return false }
-    
-    return true
+    do {
+        let _ = try _convertToRPN(infixExpression: expression)
+        
+        return true
+    } catch {
+        
+        return false
+    }
 }
 
 func _isValidPostfixNotation<C: Collection, T: BinaryOperatorProtocol>(expression: C) -> Bool
@@ -105,6 +112,7 @@ func _isValidPostfixNotation<C: Collection, T: BinaryOperatorProtocol>(expressio
     }
 }
 
+// MARK: - Conversion between notations helpers
 func _convertFromRPNToInfix<C: Collection, T: BinaryOperatorProtocol>(expression: C) throws -> [BinaryOperatorExpressionToken<T>]
     where C.Iterator.Element == BinaryOperatorExpressionToken<T>
 {
@@ -303,6 +311,7 @@ func _convertToRPN<C: Collection, T: BinaryOperatorProtocol>(infixExpression: C)
     return postfix
 }
 
+// MARK: - Subhelpers
 func _validate<T: BinaryOperatorProtocol>(infixChunk:(prev: BinaryOperatorExpressionToken<T>?, current: BinaryOperatorExpressionToken<T>)) throws {
     // When there's no preceding token, then the chunk is valid.
     guard
