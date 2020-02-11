@@ -101,6 +101,36 @@ extension Int: RepresentableAsEmptyProtocol {
 ```
 Since `Int` doesn't provide an `isEmpty()` istance method, we provide one which returns the comparsion between its value and the one returned by the static function `empty()`. Note that the value `0` was chosen because that would be the value returned by evaluating an empty expression… **This is why the API method `evaluate()` can be available on `Collection` of `BinaryExpressionToken<T: BinaryOperatorProtocol> where T.Operand: RepresentableAsEmptyProtocol`, in this way it'll also be possible to evaluate empty expressions.**
 
+### Conversion between infix and postfix notation
+The API allow to convert an expression between the two notation forms with the methods `validInfix()` and `validPostfix()`.
+Both methods will return an `Array` whose `Element` is the same as the `Collection` callee, in case it is a valid expression in any of the two notations. 
+
+That is, given a collection of tokens whose order is a valid infix notation expression, `validInfix()` will return it as an array with the same elements in the same order, while  `validPostfix()` instead will return an array with the same operands and operator elements, ordered to form the equivalent expression in postfix notation.
+
+On the other hand given a collection of tokens whose order is a valid postfix notation expression, `validInfix()` will return an array containing the same elements, but with their order changed and optionally with parenthesis tokens added, to form the equivalent expression in infix notation. While `validPostfix()` will return the same elements in the same order of the callee collection inside an array.
+
+### Combining two postfix expressions into one
+Building up a postfix expression could be a tricky task, since the reverse polish notation since we generally are more prone to use the infix notation.
+On the other hand postfix notation is way much more easy for keeping track on how a binary expression is evaluated.
+
+The method `postfixCombing(using:with:)` it's a useful tool for building up expressions in postfix notation: by providing an operator and another valid expression in either infix or postfix notation, the callee (another valid expression in either notation) and the other expression will be both turned into expressions in postfix notation and used as operands of the given operator.
+
+That is, given:
+* `a, b, c, d` are operand tokens 
+* `operatorX, operatorY, operatorZ` are operator tokens
+* `zOperation` is the concrete instance of `BinaryOperatorProtocol` associated to token `operatorZ`
+* `let lhs = [a, b, operatorX]` a valid postfix expression
+* `let rhs = [c, d, operatorY]` another valid postfix expression
+
+when: 
+* `let new = try! lhs.postfixCombinig(using: operatorZ, with: rhs)`
+
+then: 
+* `assert(new == [a, b, operatorX, c, d, operatorY, operatorZ])`
+* `let isNewValid = (new.validPostfix() != nil)`
+* `assert(isValid == true)`
+
+
 ### Errors
 Errors can be thrown when validation for the notation of the expression is performed. 
 Also during the evaluation of an expression, an operator might fail and throw an error.
@@ -116,13 +146,7 @@ Both methods need to perform a validation of the expression(s), in order to be a
 
 The methods `validInfix()` and `validPostfix` won't throw an error if the expression is not in any valid notation, but rather return `nil`. 
 
-### Conversion between infix and postfix notation
-The API allow to convert an expression between the two notation forms with the methods `validInfix()` and `validPostfix()`.
-Both methods will return an `Array` whose `Element` is the same as the `Collection` callee, in case it is a valid expression in any of the two notations. 
 
-That is, given a collection of tokens whose order is a valid infix notation expression, `validInfix()` will return it as an array with the same elements in the same order, while  `validPostfix()` instead will return an array with the same operands and operator elements, ordered to form the equivalent expression in postfix notation.
-
-On the other hand given a collection of tokens whose order is a valid postfix notation expression, `validInfix()` will return an array containing the same elements, but with their order changed and optionally with parenthesis tokens added, to form the equivalent expression in infix notation. While `validPostfix()` will return the same elements in the same order of the callee collection inside an array.
 
 ## API usage example
 Following is a trival example of usage of the API, by implementing some functional binary operators on `String` operands.
@@ -154,23 +178,24 @@ public enum MyStringOperators: BinaryOperatorProtocol {
             !(lhs.isEmpty && rhs.isEmpty)
             else { return "" }
         
-        if (lhs.isEmpty || rhs.isEmpty) { throw Error.failure }
+        let lhsCap = try _wordsCapitalized(on: lhs)
+        let rhsCap = try _wordsCapitalized(on: rhs)
+        let res = lhsCap + rhsCap
+        let first = res.first!
         
-        let lhsFixed = lhs
+        return (first.lowercased()) + (res.dropFirst())
+    }
+    
+    private static func _wordsCapitalized(on string: String) throws -> String {
+        guard
+            !string.isEmpty
+            else { throw Error.failure }
+        
+        return string
             .components(separatedBy: " ")
             .map { $0.lowercased() }
             .map { $0.capitalized }
             .joined()
-        let rhsFixed = rhs
-            .components(separatedBy: " ")
-            .map { $0.lowercased() }
-            .map { $0.capitalized }
-            .joined()
-        var res = lhsFixed + rhsFixed
-        let first = res.dropFirst()
-        res = (first.lowercased()) + res
-        
-        return res
     }
     
     // MARK: - BinaryOperatorProtocol conformance
@@ -210,6 +235,22 @@ extension String: RepresentableAsEmptyProtocol {
 }
 ```
 We've also made `String` conform to `RepresentableAsEmptyProtocol`, this way it will be possible to evaluate the expressions built upon our binary operator by using the `evaluate()` instance method on `Collection`. 
+
+It is now possible to build and work on expressions of type `Collection<BinaryExpressionToken<MyStringOperators>>`:
+
+```swift
+typealias Token = BinaryOperatorExpressionToken<MyStringOperators>
+
+let anInfix: [Token] = [
+    .openingBracket, 
+    .operand("Hello World!"), 
+    .binaryOperator(.camelCasing), 
+    .operand("This is a fun"), 
+    .closingBracket, 
+    .binaryOperator(.shuffling), 
+    .operand("experiment")
+]
+```
 
 ## See also
 * [Associativity and Commutativity of Binary Operations on mathonline.wikidot.com](http://mathonline.wikidot.com/associativity-and-commutativity-of-binary-operations)

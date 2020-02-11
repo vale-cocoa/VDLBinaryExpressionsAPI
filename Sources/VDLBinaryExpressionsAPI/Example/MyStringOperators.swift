@@ -32,23 +32,24 @@ public enum MyStringOperators: BinaryOperatorProtocol {
             !(lhs.isEmpty && rhs.isEmpty)
             else { return "" }
         
-        if (lhs.isEmpty || rhs.isEmpty) { throw Error.failure }
+        let lhsCap = try _wordsCapitalized(on: lhs)
+        let rhsCap = try _wordsCapitalized(on: rhs)
+        let res = lhsCap + rhsCap
+        let first = res.first!
         
-        let lhsFixed = lhs
+        return (first.lowercased()) + (res.dropFirst())
+    }
+    
+    private static func _wordsCapitalized(on string: String) throws -> String {
+        guard
+            !string.isEmpty
+            else { throw Error.failure }
+        
+        return string
             .components(separatedBy: " ")
             .map { $0.lowercased() }
             .map { $0.capitalized }
             .joined()
-        let rhsFixed = rhs
-            .components(separatedBy: " ")
-            .map { $0.lowercased() }
-            .map { $0.capitalized }
-            .joined()
-        var res = lhsFixed + rhsFixed
-        let first = res.dropFirst()
-        res = (first.lowercased()) + res
-        
-        return res
     }
     
     // MARK: - BinaryOperatorProtocol conformance
@@ -86,3 +87,17 @@ extension String: RepresentableAsEmptyProtocol {
         return ""
     }
 }
+
+typealias Token = BinaryOperatorExpressionToken<MyStringOperators>
+
+let anInfix: [Token] = [
+    .openingBracket,
+    .operand("Hello World!"),
+    .binaryOperator(.camelCasing),
+    .operand("This is a fun"),
+    .closingBracket,
+    .binaryOperator(.shuffling),
+    .operand("experiment")
+]
+
+
