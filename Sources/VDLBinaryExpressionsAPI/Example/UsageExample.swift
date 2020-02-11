@@ -80,3 +80,9 @@ public enum MyStringOperators: BinaryOperatorProtocol {
     }
     
 }
+
+extension String: RepresentableAsEmptyProtocol {
+    public static func empty() -> String {
+        return ""
+    }
+}

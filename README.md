@@ -33,7 +33,10 @@ This would be postfix represention of the infix expression *A + B * C*, while:
 would be the postfix representation for the bracketed verision *(A + B) * C*.
 This notation can be easily evaluated by a compiutational systems by using a stack.
 
-## General API description
+## API Overview
+Expressions can be represented as collections of tokens, where each token is either an operand, an operator or a bracket (open/close). 
+The position of each token inside the collection will match its position in the expression: that is a token at the first index of a collection is the leftmost in the expression.
+
 The public API add functionalities to `Collection<BinaryOperatorExpressionToken<T>>` providing instance methods for:
 
 * validation/conversion of its content to an expression in either infix or postfix expression via:
@@ -99,6 +102,27 @@ extension Int: RepresentableAsEmptyProtocol {
 Since `Int` doesn't provide an `isEmpty()` istance method, we provide one which returns the comparsion between its value and the one returned by the static function `empty()`. Note that the value `0` was chosen because that would be the value returned by evaluating an empty expression… **This is why the API method `evaluate()` can be available on `Collection` of `BinaryExpressionToken<T: BinaryOperatorProtocol> where T.Operand: RepresentableAsEmptyProtocol`, in this way it'll also be possible to evaluate empty expressions.**
 
 ### Errors
+Errors can be thrown when validation for the notation of the expression is performed. 
+Also during the evaluation of an expression, an operator might fail and throw an error.
+
+Listed below are the API methods introduced on `Collection` that might throw an `Error` of type `BinaryExpressionError.notValid`: 
+
+* `postfixCombinig(using:with:)`
+* `evaluate()` 
+
+Both methods need to perform a validation of the expression(s), in order to be able to compute their result. 
+
+`evaluate()` might also rethrow another `Error` thrown by the concrete type of `BinaryOperatorProtocol` associated to the expression token; that would happen when a binary operation fail while being applied to the operands in the expression during the result calculation. 
+
+The methods `validInfix()` and `validPostfix` won't throw an error if the expression is not in any valid notation, but rather return `nil`. 
+
+### Conversion between infix and postfix notation
+The API allow to convert an expression between the two notation forms with the methods `validInfix()` and `validPostfix()`.
+Both methods will return an `Array` whose `Element` is the same as the `Collection` callee, in case it is a valid expression in any of the two notations. 
+
+That is, given a collection of tokens whose order is a valid infix notation expression, `validInfix()` will return it as an array with the same elements in the same order, while  `validPostfix()` instead will return an array with the same operands and operator elements, ordered to form the equivalent expression in postfix notation.
+
+On the other hand given a collection of tokens whose order is a valid postfix notation expression, `validInfix()` will return an array containing the same elements, but with their order changed and optionally with parenthesis tokens added, to form the equivalent expression in infix notation. While `validPostfix()` will return the same elements in the same order of the callee collection inside an array.
 
 ## API usage example
 Following is a trival example of usage of the API, by implementing some functional binary operators on `String` operands.
@@ -115,9 +139,41 @@ public enum MyStringOperators: BinaryOperatorProtocol {
     }
     
     static func shuffle(lhs: String, rhs: String) throws -> String {
+        guard
+            !lhs.isEmpty,
+            !rhs.isEmpty
+            else { throw Error.failure}
+        
         return zip(lhs, rhs)
+            .map { (String($0.0), String($0.1)) }
+            .reduce("") { $0 + ($1.0 + $1.1) }
     }
     
+    static func camelCase(lhs: String, rhs: String) throws -> String {
+        guard
+            !(lhs.isEmpty && rhs.isEmpty)
+            else { return "" }
+        
+        if (lhs.isEmpty || rhs.isEmpty) { throw Error.failure }
+        
+        let lhsFixed = lhs
+            .components(separatedBy: " ")
+            .map { $0.lowercased() }
+            .map { $0.capitalized }
+            .joined()
+        let rhsFixed = rhs
+            .components(separatedBy: " ")
+            .map { $0.lowercased() }
+            .map { $0.capitalized }
+            .joined()
+        var res = lhsFixed + rhsFixed
+        let first = res.dropFirst()
+        res = (first.lowercased()) + res
+        
+        return res
+    }
+    
+    // MARK: - BinaryOperatorProtocol conformance
     public typealias Operand = String
     
     public var binaryOperation: (String, String) throws -> String {
@@ -126,7 +182,31 @@ public enum MyStringOperators: BinaryOperatorProtocol {
         case .camelCasing: return Self.camelCase
         }
     }
+    
+    public var priority: Int {
+        switch self {
+        case .shuffling:
+            return 10
+        case.camelCasing:
+            return 50
+        }
+    }
+    
+    public var associativity: BinaryOperatorAssociativity {
+        switch self {
+        case .shuffling:
+            return .left
+        case .camelCasing:
+            return .left
+        }
+    }
+    
 }
 
-
+extension String: RepresentableAsEmptyProtocol {
+    public static func empty() -> String {
+        return ""
+    }
+}
 ```
+We've also made `String` conform to `RepresentableAsEmptyProtocol`, this way it will be possible to evaluate the expressions built upon our binary operator by using the `evaluate()` instance method on `Collection`. 
