@@ -149,6 +149,7 @@ The methods `validInfix()` and `validPostfix` won't throw an error if the expres
 ## API usage example
 Following is a trival example of usage of the API, by implementing some functional binary operators on `String` operands.
 
+### Creating a concrete BinaryOperatorProtocol type
 Firstly we need to define our `BinaryOperatorProtocol` type, usually an `enum` would suit fine this purpose:
 
 ```swift
@@ -234,6 +235,7 @@ extension String: RepresentableAsEmptyProtocol {
 ```
 We've also made `String` conform to `RepresentableAsEmptyProtocol`, this way it will be possible to evaluate the expressions built upon our binary operator by using the `evaluate()` instance method on `Collection`. 
 
+### Using BinaryOperatorExpressionToken
 It is now possible to build and work on expressions of type `Collection<BinaryExpressionToken<MyStringOperators>>`:
 
 ```swift
@@ -249,6 +251,8 @@ let anInfix: [Token] = [
     .operand("experiment")
 ]
 ```
+
+### Codable conformance
 By also having the concrete `BinaryOperatorProtocol` conform to `Codable`, it will be possible to effectively encode and then decode these binary expressions:
 
 ```swift
