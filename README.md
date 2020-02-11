@@ -31,19 +31,23 @@ This would be postfix represention of the infix expression *A + B * C*, while:
 **A B + C \** 
 
 would be the postfix representation for the bracketed verision *(A + B) * C*.
-This notation can be easily evaluated by a compiutational systems by using a stack.
+This notation can be easily evaluated by using a stack.
 
 ## API Overview
-Expressions can be represented as collections of tokens, where each token is either an operand, an operator or a bracket (open/close). 
+### Binary expressions represented as collections of tokens
+Expressions can be represented as collections of tokens, where each token is either an operand, an operator —or a bracket (opened/closed) for the infix notation. 
+
 The position of each token inside the collection will match its position in the expression: that is a token at the first index of a collection is the leftmost in the expression.
 
+### Functionalities by extension on Collection protocol
 The public API add functionalities to `Collection<BinaryOperatorExpressionToken<T>>` providing instance methods for:
 
 * validation/conversion of its content to an expression in either infix or postfix expression via:
     * `validInfix()` 
     * `validPostfix`
 * combination into a postfix expression of its content via an operation with another expression via `postfixCombining(using:with:)`
-* —eventually— evaluation of its content into the result for the represented expression via `evaluate()`
+*  evaluation of its content into the result for the represented expression via `evaluate()` —available when certain criteria are met.
+* codability via `Codable` protocol of the expression —available when certain criteria are met.
 
 ### Building blocks
 As mentioned before this API introduces instance methods on `Collection` with an `Element` of type `BinaryExpressionToken<T>`, which is the basic bulding block for these expressions.
@@ -67,12 +71,15 @@ It also provides the operator priority by its readonly property `priority`,  exp
 
 Finally it provides the associativity direction of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
 
-### BinaryOperatorAssociativity
-This `enum` describes the associativity direction of a binary operator.
+##### Codable conformance
+When a concrete type `T` implementing `BinaryOperatorProtocol` and its associated cocrete type `T.Operand` both conform to `Codable`, then the resulting `BinaryExpressionToken<T>` will also provide `Codable` conformance, making possible to encode/decode binary expressions of this kind. 
+
+### Associativity direction for operators: BinaryOperatorAssociativity
+This `enum` describes the associativity direction of a binary operator when evaluated an infix expression.
 An operator is *left-associative* when the operations are grouped to the left in a chained expression evaluation.
 On the contrary, an operator is *right-associative* when the operations are grouped to the right in a chained expression evaluation.
 
-For example given the operator `<+>`:
+For example given the operator `<+>`, and the operands `a, b, c`:
 * left-associative: `a <+> b <+> c == (a <+> b) <+> c` 
 * right-associative: `a <+> b <+> c == a <+> (b <+> c)` 
 
@@ -82,7 +89,8 @@ Therefore the possible cases of this `enum` are:
 
 #### RepresentableAsEmptyProtocol
 When the `Operand` associated type also conforms to the API protocol `RepresentableAsEmptyProtocol`, then it will be possible to use the instance method `evaluate()` on `Collection<BinaryExpressionToken<T>>` .
-A type conforming to `RepresentableAsEmptyProtocol` must provide an instance method `isEmpty`, a `Bool` flag signaling that the instance is equal to the *"empty"* value, and a static method `empty()` which return the *"empty"* value for the conforming type.
+
+A type conforming to `RepresentableAsEmptyProtocol` must provide an instance method `isEmpty()`, a `Bool` flag signaling that the instance is equal to the *"empty"* value, and a static method `empty()` which return the *"empty"* value for the conforming type.
 
 For example making `String` conform to `RepresentableAsEmptyProtocol`:
 ```swift
@@ -92,35 +100,36 @@ extension String: RepresentableAsEmptyProtocol {
 ```
 No need here to implement `isEmpty()` since `String` already provides it, which is also consistent with the implementation of the static method `empty() -> String`  we've just provided.
 
-On the other hand making `Int` conform:
+On the other hand making `Int` conform to `RepresentableAsEmptyProtcol`:
 ```swift 
 extension Int: RepresentableAsEmptyProtocol {
     public static func empty() -> Int { return 0 }
     public func isEmpty() -> Bool { return self == Int.empty() }
 }
 ```
-Since `Int` doesn't provide an `isEmpty()` istance method, we provide one which returns the comparsion between its value and the one returned by the static function `empty()`. Note that the value `0` was chosen because that would be the value returned by evaluating an empty expression… **This is why the API method `evaluate()` can be available on `Collection` of `BinaryExpressionToken<T: BinaryOperatorProtocol> where T.Operand: RepresentableAsEmptyProtocol`, in this way it'll also be possible to evaluate empty expressions.**
+Since `Int` doesn't provide an `isEmpty()` istance method, we must provide one which returns the comparsion between its value and the one returned by the static function `empty()`. Note that the value `0` was chosen because that would also be the value returned by evaluating an empty binary expression with integer numbers as operands… **This is why the API method `evaluate()` can be available on `Collection` of `BinaryExpressionToken<T: BinaryOperatorProtocol> where T.Operand: RepresentableAsEmptyProtocol`, cause that is how to evaluate empty collections.**
 
 ### Conversion between infix and postfix notation
-The API allow to convert an expression between the two notation forms with the methods `validInfix()` and `validPostfix()`.
-Both methods will return an `Array` whose `Element` is the same as the `Collection` callee, in case it is a valid expression in any of the two notations. 
+The API allow to convert an expression between the two notation forms with the instance methods `validInfix()` and `validPostfix()`.
+Both methods will return an `Array` whose `Element` is the same type as the `Collection.Iterator.Element` callee, in case it is a valid expression in any of the two notations. 
 
 That is, given a collection of tokens whose order is a valid infix notation expression, `validInfix()` will return it as an array with the same elements in the same order, while  `validPostfix()` instead will return an array with the same operands and operator elements, ordered to form the equivalent expression in postfix notation.
 
-On the other hand given a collection of tokens whose order is a valid postfix notation expression, `validInfix()` will return an array containing the same elements, but with their order changed and optionally with parenthesis tokens added, to form the equivalent expression in infix notation. While `validPostfix()` will return the same elements in the same order of the callee collection inside an array.
+On the other hand given a collection of tokens whose order is a valid postfix notation expression, `validInfix()` will return an array containing the same elements, but with their order changed —eventually with parenthesis tokens added when needed—, to form the equivalent expression in infix notation. While calling `validPostfix()` will return an array containing the same elements in the same order of the callee collection.
 
 ### Combining two postfix expressions into one
-Building up a postfix expression could be a tricky task, since the reverse polish notation since we generally are more prone to use the infix notation.
-On the other hand postfix notation is way much more easy for keeping track on how a binary expression is evaluated.
+Building up a postfix expression could be a tricky task, since we are generally more used to work with the infix notation.
+On the other hand postfix notation is way much easier for keeping track on how a binary expression is evaluated.
 
-The method `postfixCombing(using:with:)` it's a useful tool for building up expressions in postfix notation: by providing an operator and another valid expression in either infix or postfix notation, the callee (another valid expression in either notation) and the other expression will be both turned into expressions in postfix notation and used as operands of the given operator.
+The method `postfixCombing(using:with:)` it's a useful tool for building up expressions in postfix notation: by providing an operator and another valid expression —in either infix or postfix notation. 
+Both expressions will be turned into postfix notation and used as operands for the given operator, forming a unique valid postfix expression.
 
 That is, given:
-* `a, b, c, d` are operand tokens 
-* `operatorX, operatorY, operatorZ` are operator tokens
-* `zOperation` is the concrete instance of `BinaryOperatorProtocol` associated to token `operatorZ`
-* `let lhs = [a, b, operatorX]` a valid postfix expression
-* `let rhs = [c, d, operatorY]` another valid postfix expression
+* `a, b, c, d` as operand tokens 
+* `operatorX, operatorY, operatorZ` as operator tokens
+* `zOperation` as the concrete instance of `BinaryOperatorProtocol` associated to token `operatorZ`
+* `let lhs = [a, b, operatorX]` as a valid postfix expression
+* `let rhs = [c, d, operatorY]` as another valid postfix expression
 
 when: 
 * `let new = try! lhs.postfixCombinig(using: operatorZ, with: rhs)`
@@ -132,24 +141,31 @@ then:
 
 
 ### Errors
+#### Validation errors
 Errors can be thrown when validation for the notation of the expression is performed. 
-Also during the evaluation of an expression, an operator might fail and throw an error.
+The type of error thrown in those circumstances is `BinaryExpressionError`, specifically the `.notValid` value.
 
-Listed below are the API methods introduced on `Collection` that might throw an `Error` of type `BinaryExpressionError.notValid`: 
+Listed below are the API methods introduced on `Collection` that might throw a `BinaryExpressionError.notValid`: 
 
 * `postfixCombinig(using:with:)`
 * `evaluate()` 
 
 Both methods need to perform a validation of the expression(s), in order to be able to compute their result. 
 
-`evaluate()` might also rethrow another `Error` thrown by the concrete type of `BinaryOperatorProtocol` associated to the expression token; that would happen when a binary operation fail while being applied to the operands in the expression during the result calculation. 
+#### Evaliuation errors
+During the evaluation of an expression, when the expression is valid, an operator might fail and throw an error.
 
+`evaluate()` will rethrow the `Error` thrown by the concrete type of `BinaryOperatorProtocol` associated to the expression token, when a binary operation fails while being applied to the operands in the expression during the result calculation. 
+
+Note that `evaluate()` method will perform a validation check on the expresison before starting the result calcultaion, hence the validation error has priority over the failing operator error.
+
+#### Methods returning Nil instead of throwing an error 
 The methods `validInfix()` and `validPostfix` won't throw an error if the expression is not in any valid notation, but rather return `nil`. 
 
 ## API usage example
-Following is a trival example of usage of the API, by implementing some functional binary operators on `String` operands.
+Following is a trival example of usage of the API, which shows how to implement some functional binary operators on `String` operands and use them to build binary expression.
 
-### Creating a concrete BinaryOperatorProtocol type
+### Creating a concrete `BinaryOperatorProtocol` type
 Firstly we need to define our `BinaryOperatorProtocol` type, usually an `enum` would suit fine this purpose:
 
 ```swift
