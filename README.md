@@ -146,8 +146,6 @@ Both methods need to perform a validation of the expression(s), in order to be a
 
 The methods `validInfix()` and `validPostfix` won't throw an error if the expression is not in any valid notation, but rather return `nil`. 
 
-
-
 ## API usage example
 Following is a trival example of usage of the API, by implementing some functional binary operators on `String` operands.
 
@@ -250,6 +248,50 @@ let anInfix: [Token] = [
     .binaryOperator(.shuffling), 
     .operand("experiment")
 ]
+```
+By also having the concrete `BinaryOperatorProtocol` conform to `Codable`, it will be possible to effectively encode and then decode these binary expressions:
+
+```swift
+extension MyStringOperators: Codable {
+    enum Base: String, Codable {
+        case shufflingEncodedOperator
+        case camelCaseEncodedOperator
+        
+        fileprivate var concrete: MyStringOperators {
+            switch self {
+            case .camelCaseEncodedOperator:
+                return .camelCasing
+            case .shufflingEncodedOperator:
+                return .shuffling
+            }
+        }
+    }
+    
+    fileprivate var base: Base {
+        switch self {
+        case .shuffling:
+            return .shufflingEncodedOperator
+        case .camelCasing:
+            return .camelCaseEncodedOperator
+        }
+    }
+    
+    enum CodingKeys: CodingKey {
+        case base
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let base = try container.decode(Base.self, forKey: .base)
+        self = base.concrete
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.base, forKey: .base)
+    }
+    
+}
 ```
 
 ## See also

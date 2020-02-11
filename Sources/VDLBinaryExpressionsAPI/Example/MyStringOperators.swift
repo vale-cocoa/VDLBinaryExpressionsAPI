@@ -100,4 +100,43 @@ let anInfix: [Token] = [
     .operand("experiment")
 ]
 
-
+extension MyStringOperators: Codable {
+    enum Base: String, Codable {
+        case shufflingEncodedOperator
+        case camelCaseEncodedOperator
+        
+        fileprivate var concrete: MyStringOperators {
+            switch self {
+            case .camelCaseEncodedOperator:
+                return .camelCasing
+            case .shufflingEncodedOperator:
+                return .shuffling
+            }
+        }
+    }
+    
+    fileprivate var base: Base {
+        switch self {
+        case .shuffling:
+            return .shufflingEncodedOperator
+        case .camelCasing:
+            return .camelCaseEncodedOperator
+        }
+    }
+    
+    enum CodingKeys: CodingKey {
+        case base
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let base = try container.decode(Base.self, forKey: .base)
+        self = base.concrete
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.base, forKey: .base)
+    }
+    
+}
