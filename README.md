@@ -65,7 +65,7 @@ This property is a closure of type `(Operand, Operand) throws -> Operand`, hence
 
 It also provides the operator priority by its readonly property `priority`,  expressed by an `Int`. Higher values mean higher priority.
 
-Finally it provides the associativity direction[^3] of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
+Finally it provides the associativity direction of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
 
 ### BinaryOperatorAssociativity
 This `enum` describes the associativity direction of a binary operator.
@@ -210,3 +210,11 @@ extension String: RepresentableAsEmptyProtocol {
 }
 ```
 We've also made `String` conform to `RepresentableAsEmptyProtocol`, this way it will be possible to evaluate the expressions built upon our binary operator by using the `evaluate()` instance method on `Collection`. 
+
+## See also
+* [Associativity and Commutativity of Binary Operations on mathonline.wikidot.com](http://mathonline.wikidot.com/associativity-and-commutativity-of-binary-operations)
+* [Ray Wenderlich's Swift Algorithm Club - Shunting Yard ](https://github.com/raywenderlich/swift-algorithm-club/tree/master/Shunting%20Yard)
+* [Shunting Yard algorithm on Wikipedia](https://en.wikipedia.org/wiki/Shunting-yard_algorithm)
+* [Operator Associativity on Wikipedia](https://en.wikipedia.org/wiki/Operator_associativity#Right-associativity_of_assignment_operators)
+* [Converting postfix to infix on codeproject.com](https://www.codeproject.com/Articles/405361/Converting-Postfix-Expressions-to-Infix)
+* [Monoids, semigroups and friends by Mark Seemann](https://blog.ploeh.dk/2017/10/05/monoids-semigroups-and-friends/)
