@@ -39,7 +39,7 @@ Expressions can be represented as collections of tokens, where each token is eit
 
 The position of each token inside the collection will match its position in the expression: that is a token at the first index of a collection is the leftmost in the expression.
 
-### Functionalities by extension on Collection protocol
+### Functionalities by extension on `Collection` protocol
 The public API add functionalities to `Collection<BinaryOperatorExpressionToken<T>>` providing instance methods for:
 
 * validation/conversion of its content to an expression in either infix or postfix expression via:
@@ -52,7 +52,7 @@ The public API add functionalities to `Collection<BinaryOperatorExpressionToken<
 ### Building blocks
 As mentioned before this API introduces instance methods on `Collection` with an `Element` of type `BinaryExpressionToken<T>`, which is the basic bulding block for these expressions.
 
-#### BinaryExpressionToken
+#### `BinaryExpressionToken`
 `BinaryExpressionToken<T>` is a generic `enum` which provides all the cases a token in a binary expression could be:
 * `.operand(T.Operand)`: an operand
 * `.binaryOperator(T)`: an operator
@@ -61,7 +61,7 @@ As mentioned before this API introduces instance methods on `Collection` with an
 
 The generic `T` type used to specialize this generic `enum` must conform to `BinaryOperatorProtocol<Operand>`, a `protocol` which defines how an operator works on its associated type `Operand`, its priority and its kind of associativty. 
 
-#### BinaryOperatorProtocol
+#### `BinaryOperatorProtocol`
 As mentioned earlier `BinaryOperatorProtocol<Operand>` defines how a 
 an operator works, and on what type of operand it works with.
 Therefore it has to associate with a concrete type (generically referred as `Operand`) which it operates on by providing the binary operation it represents via its functional readonly property `binaryOperation`.
@@ -71,10 +71,10 @@ It also provides the operator priority by its readonly property `priority`,  exp
 
 Finally it provides the associativity direction of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
 
-##### Codable conformance
+##### `Codable` conformance
 When a concrete type `T` implementing `BinaryOperatorProtocol` and its associated cocrete type `T.Operand` both conform to `Codable`, then the resulting `BinaryExpressionToken<T>` will also provide `Codable` conformance, making possible to encode/decode binary expressions of this kind. 
 
-### Associativity direction for operators: BinaryOperatorAssociativity
+### Associativity direction for operators: `BinaryOperatorAssociativity`
 This `enum` describes the associativity direction of a binary operator when evaluated an infix expression.
 An operator is *left-associative* when the operations are grouped to the left in a chained expression evaluation.
 On the contrary, an operator is *right-associative* when the operations are grouped to the right in a chained expression evaluation.
@@ -87,7 +87,7 @@ Therefore the possible cases of this `enum` are:
 * `.left` for *left-associative* operator
 * `.right` for *right-associative* operator
 
-#### RepresentableAsEmptyProtocol
+#### `RepresentableAsEmptyProtocol`
 When the `Operand` associated type also conforms to the API protocol `RepresentableAsEmptyProtocol`, then it will be possible to use the instance method `evaluate()` on `Collection<BinaryExpressionToken<T>>` .
 
 A type conforming to `RepresentableAsEmptyProtocol` must provide an instance method `isEmpty()`, a `Bool` flag signaling that the instance is equal to the *"empty"* value, and a static method `empty()` which return the *"empty"* value for the conforming type.
@@ -152,21 +152,23 @@ Listed below are the API methods introduced on `Collection` that might throw a `
 
 Both methods need to perform a validation of the expression(s), in order to be able to compute their result. 
 
-#### Evaliuation errors
+#### Evaluation errors
 During the evaluation of an expression, when the expression is valid, an operator might fail and throw an error.
 
 `evaluate()` will rethrow the `Error` thrown by the concrete type of `BinaryOperatorProtocol` associated to the expression token, when a binary operation fails while being applied to the operands in the expression during the result calculation. 
 
 Note that `evaluate()` method will perform a validation check on the expresison before starting the result calcultaion, hence the validation error has priority over the failing operator error.
 
-#### Methods returning Nil instead of throwing an error 
-The methods `validInfix()` and `validPostfix` won't throw an error if the expression is not in any valid notation, but rather return `nil`. 
+#### Methods returning `Nil` instead of throwing an error 
+The methods `validInfix()` and `validPostfix()` won't throw an error if the callee expression is not in any valid notation, but rather return `nil`. 
 
 ## API usage example
 Following is a trival example of usage of the API, which shows how to implement some functional binary operators on `String` operands and use them to build binary expression.
 
 ### Creating a concrete `BinaryOperatorProtocol` type
-Firstly we need to define our `BinaryOperatorProtocol` type, usually an `enum` would suit fine this purpose:
+First we need to define a concrete `BinaryOperatorProtocol` type —named in this example `MyStringOperators`– which also associates to another concrete type used as `Operand` —in this example `String` since we are creating binary operators that work on strings.
+
+Usually an `enum` would suit fine this purpose:
 
 ```swift
 public enum MyStringOperators: BinaryOperatorProtocol {
@@ -249,9 +251,10 @@ extension String: RepresentableAsEmptyProtocol {
     }
 }
 ```
-We've also made `String` conform to `RepresentableAsEmptyProtocol`, this way it will be possible to evaluate the expressions built upon our binary operator by using the `evaluate()` instance method on `Collection`. 
+We've also made `String` conform to `RepresentableAsEmptyProtocol`, this way it will be possible to evaluate the expressions built upon the concrete binary operator. 
+That is, `evaluate()` instance method will be available on `Collection<BinaryExpressionToken<MyStringOperators>>` . 
 
-### Using BinaryOperatorExpressionToken
+### Using `BinaryOperatorExpressionToken`
 It is now possible to build and work on expressions of type `Collection<BinaryExpressionToken<MyStringOperators>>`:
 
 ```swift
@@ -268,7 +271,7 @@ let anInfix: [Token] = [
 ]
 ```
 
-### Codable conformance
+### `Codable` conformance
 By also having the concrete `BinaryOperatorProtocol` conform to `Codable`, it will be possible to effectively encode and then decode these binary expressions:
 
 ```swift
