@@ -40,14 +40,29 @@ The public API add functionalities to `Collection<BinaryOperatorExpressionToken<
     * `validInfix()` 
     * `validPostfix`
 * combination into a postfix expression of its content via an operation with another expression via `postfixCombining(using:with:)`
-* evaluation of its content into the result for the represented expression via `evaluate()`
+* —eventually[^1]— evaluation of its content into the result for the represented expression via `evaluate()`
 
 ### Building blocks
 As mentioned before this API introduces instance methods on `Collection` with an `Element` of type `BinaryExpressionToken<T>`, which is the basic bulding block for these expressions.
+
+#### BinaryExpressionToken
 `BinaryExpressionToken<T>` is a generic `enum` which provides all the cases a token in a binary expression could be:
 * `.operand(T.Operand)`: an operand
-* `binaryOperator(T)`: an operator
-* `openingBracket`: an opening bracket
-* `closingBracket`: a closing bracket
-The generic `T` type used to specialize this generic `enum` must conform to `BinaryOperatorProtocol<Operand>`, a `protocol` which defines how an operator works on its associated type `Operand`, its priority and its kind of associativty. 
+* `.binaryOperator(T)`: an operator
+* `.openingBracket`: an opening bracket
+* `.closingBracket`: a closing bracket
+
+The generic `T` type used to specialize this generic `enum` must conform to `BinaryOperatorProtocol<Operand>`, a `protocol` which defines how an operator works on its associated type `Operand`, its priority and its kind of associativty[^2]. 
+
+#### BinaryOperatorProtocol
+As mentioned earlier `BinaryOperatorProtocol<Operand>` defines how a 
+an operator works, and on what type of operand it works with.
+Therefore it has to associate with a concrete type (generically referred as `Operand`) which it operates on by providing the binary operation it represents via its functional readonly property `binaryOperation`.
+This property is a closure of type `(Operand, Operand) throws -> Operand`, hence a binary operation (which may fail throwing an `Error`).
+
+It also provides the operator priority by its readonly property `priority`,  expressed by an `Int`. Higher values mean higher priority.
+
+Finally it provides the associativity direction[^3] of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
+
+[1]: When the `Operand` associated type also conforms to the API protocol `RepresentableAsEmptyProtocol`, then it will be possible to use the instance method `evaluate()` on `Collection<BinaryExpressionToken<T>>` .
 
