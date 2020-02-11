@@ -4,7 +4,7 @@ An API for working with associative binary operation expressions.
 
 ## Introduction 
 ### Binary associative operations
-Given A binary operation *f(T,T) -> T*, represented by the the operator `<*>` it said to be associative if for all `a,b,c` contained in *T* we have that `a <*> (b <*> c) = (a <*> b) <*> c`.
+Given A binary operation *f(T, T) -> T*, represented by the the operator `<*>` it said to be associative if for all `a,b,c` contained in *T* we have that `a <*> (b <*> c) = (a <*> b) <*> c`.
 
 ### Expressions and notations
 Expressions representing binary operations on operands can be in either *infix* notation or *postfix* notation (a.k.a. Reverse Polish Notation). The latter is mainly used in computational systems.
@@ -28,7 +28,7 @@ In postfix notation the operators comes after the corresponding operands, theref
 
 This would be postfix represention of the infix expression *A + B * C*, while:
 
-**A B + C &ast;** 
+**A B + C \** 
 
 would be the postfix representation for the bracketed verision *(A + B) * C*.
 This notation can be easily evaluated by a compiutational systems by using a stack.
@@ -40,7 +40,7 @@ The public API add functionalities to `Collection<BinaryOperatorExpressionToken<
     * `validInfix()` 
     * `validPostfix`
 * combination into a postfix expression of its content via an operation with another expression via `postfixCombining(using:with:)`
-* —eventually[^1]— evaluation of its content into the result for the represented expression via `evaluate()`
+* —eventually— evaluation of its content into the result for the represented expression via `evaluate()`
 
 ### Building blocks
 As mentioned before this API introduces instance methods on `Collection` with an `Element` of type `BinaryExpressionToken<T>`, which is the basic bulding block for these expressions.
@@ -52,7 +52,7 @@ As mentioned before this API introduces instance methods on `Collection` with an
 * `.openingBracket`: an opening bracket
 * `.closingBracket`: a closing bracket
 
-The generic `T` type used to specialize this generic `enum` must conform to `BinaryOperatorProtocol<Operand>`, a `protocol` which defines how an operator works on its associated type `Operand`, its priority and its kind of associativty[^2]. 
+The generic `T` type used to specialize this generic `enum` must conform to `BinaryOperatorProtocol<Operand>`, a `protocol` which defines how an operator works on its associated type `Operand`, its priority and its kind of associativty. 
 
 #### BinaryOperatorProtocol
 As mentioned earlier `BinaryOperatorProtocol<Operand>` defines how a 
@@ -64,5 +64,69 @@ It also provides the operator priority by its readonly property `priority`,  exp
 
 Finally it provides the associativity direction[^3] of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
 
-[1]: When the `Operand` associated type also conforms to the API protocol `RepresentableAsEmptyProtocol`, then it will be possible to use the instance method `evaluate()` on `Collection<BinaryExpressionToken<T>>` .
+### BinaryOperatorAssociativity
+This `enum` describes the associativity direction of a binary operator.
+An operator is *left-associative* when the operations are grouped to the left in a chained expression evaluation.
+On the contrary, an operator is *right-associative* when the operations are grouped to the right in a chained expression evaluation.
 
+For example given the operator `<+>`:
+* left-associative: `a <+> b <+> c == (a <+> b) <+> c` 
+* right-associative: `a <+> b <+> c == a <+> (b <+> c)` 
+
+Therefore the possible cases of this `enum` are:
+* `.left` for *left-associative* operator
+* `.right` for *right-associative* operator
+
+#### RepresentableAsEmptyProtocol
+When the `Operand` associated type also conforms to the API protocol `RepresentableAsEmptyProtocol`, then it will be possible to use the instance method `evaluate()` on `Collection<BinaryExpressionToken<T>>` .
+A type conforming to `RepresentableAsEmptyProtocol` must provide an instance method `isEmpty`, a `Bool` flag signaling that the instance is equal to the *"empty"* value, and a static method `empty()` which return the *"empty"* value for the conforming type.
+
+For example making `String` conform to `RepresentableAsEmptyProtocol`:
+```swift
+extension String: RepresentableAsEmptyProtocol {
+    public static func empty() -> String { return "" }
+}
+```
+No need here to implement `isEmpty()` since `String` already provides it, which is also consistent with the implementation of the static method `empty() -> String`  we've just provided.
+
+On the other hand making `Int` conform:
+```swift 
+extension Int: RepresentableAsEmptyProtocol {
+    public static func empty() -> Int { return 0 }
+    public func isEmpty() -> Bool { return self == Int.empty() }
+}
+```
+Since `Int` doesn't provide an `isEmpty()` istance method, we provide one which returns the comparsion between its value and the one returned by the static function `empty()`. Note that the value `0` was chosen because that would be the value returned by evaluating an empty expression… **This is why the API method `evaluate()` can be available on `Collection` of `BinaryExpressionToken<T: BinaryOperatorProtocol> where T.Operand: RepresentableAsEmptyProtocol`, in this way it'll also be possible to evaluate empty expressions.**
+
+### Errors
+
+## API usage example
+Following is a trival example of usage of the API, by implementing some functional binary operators on `String` operands.
+
+Firstly we need to define our `BinaryOperatorProtocol` type, usually an `enum` would suit fine this purpose:
+
+```swift
+public enum MyStringOperators: BinaryOperatorProtocol {
+    case shuffling
+    case camelCasing
+    
+    enum Error: Swift.Error {
+        case failure
+    }
+    
+    static func shuffle(lhs: String, rhs: String) throws -> String {
+        return zip(lhs, rhs)
+    }
+    
+    public typealias Operand = String
+    
+    public var binaryOperation: (String, String) throws -> String {
+        switch self {
+        case .shuffling: return Self.shuffle
+        case .camelCasing: return Self.camelCase
+        }
+    }
+}
+
+
+```
