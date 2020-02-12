@@ -44,19 +44,37 @@ extension Collection {
         
         return try? _convertFromRPNToInfix(expression: self)
     }
-
-    /// Combines with the given `Collection` of `BinaryOperatorExpressionToken` into a valid binary operation expression in postfix notation using the given operation.
+    /// Combines wuth the given non empty `Collection` of `BinaryExpressionToken` into a valid binary expression in infix notation using the given operator.
     ///
-    /// - parameter using: the binary operation to use as operator.
-    /// - parameter with: another `Collection` of `BinaryOperatorExpressionToken` to combine with, used as rightmost operand. It can be either in postfix or infix notation.
+    /// - parameter by: the binary operation to use as operator
+    /// - parameter with: another not empty `Collection` of `BinaryOperatorExpressionToken` to combine with, used as righmost operand. It can be either in postfix or infix notation.
+    /// - returns: an `Array` of `BinaryOperatorExpressionToken` ordered as a valid binary operation expression in infix notation.
+    /// - throws: `BinaryExpressionError.notValid` in case the combinig operation cannot be done (either self or given expression are not valid binary operation expression, or empty).
+    /// - note: both expressions (callee and the one given as parameter) must not be empty and valid either in postfix or infix notations.
+    public func infix<C: Collection, T: BinaryOperatorProtocol>(by operation: T, with rhs: C) throws -> [Self.Iterator.Element]
+        where C.Iterator.Element == Self.Iterator.Element, Self.Iterator.Element == BinaryOperatorExpressionToken<T>
+    {
+        let lhsSubInfix = try _addBracketsIfNeeded(subInfix: try _subInfix(from: self), otherOperator: operation)
+        let rhsSubInfix = try _addBracketsIfNeeded(subInfix: try _subInfix(from: rhs), otherOperator: operation)
+        
+        return lhsSubInfix.expression + [.binaryOperator(operation)] + rhsSubInfix.expression
+    }
+    
+    /// Combines with the given not empty `Collection` of `BinaryOperatorExpressionToken` into a valid binary operation expression in postfix notation using the given operation.
+    ///
+    /// - parameter by: the binary operation to use as operator.
+    /// - parameter with: another not empty `Collection` of `BinaryOperatorExpressionToken` to combine with, used as rightmost operand. It can be either in postfix or infix notation.
     /// - returns: an `Array` of `BinaryOperatorExpressionToken` ordered as a valid binary operation expression in postfix notation.
-    /// - throws: `BinaryExpressionError.notValid` in case the combinig operation cannot be done (either self or given expression are not valid binary operation expression).
-    public func postfixCombining<C: Collection, T: BinaryOperatorProtocol>(using operation: T, with rhs: C) throws -> [Self.Iterator.Element]
+    /// - throws: `BinaryExpressionError.notValid` in case the combinig operation cannot be done (either self or given expression are not valid binary operation expression or empty).
+    /// - note: both expressions (callee and the one given as parameter) must not be empty and valid either in postfix or infix notations.
+    public func postfix<C: Collection, T: BinaryOperatorProtocol>(by operation: T, with rhs: C) throws -> [Self.Iterator.Element]
         where C.Iterator.Element == Self.Iterator.Element, Self.Iterator.Element == BinaryOperatorExpressionToken<T>
     {
         guard
             let lhsRPN = self.validPostfix(),
-            let rhsRPN = rhs.validPostfix()
+            let rhsRPN = rhs.validPostfix(),
+            !lhsRPN.isEmpty,
+            !rhsRPN.isEmpty
             else { throw BinaryExpressionError.notValid }
         
         return lhsRPN + rhsRPN + [.binaryOperator(operation)]
@@ -479,3 +497,22 @@ func _addBracketsIfNeeded<T: BinaryOperatorProtocol>(subInfix: _SubInfixExpressi
     return (expression: newInfix, mainOperator: subInfix.mainOperator)
 }
 
+func _subInfix<C: Collection, T: BinaryOperatorProtocol>(from expression: C) throws -> _SubInfixExpression<T>
+    where C.Iterator.Element == BinaryOperatorExpressionToken<T>
+{
+    guard
+        !expression.isEmpty
+        else {
+            return ([], nil) }
+    
+    guard
+        let postfix = expression.validPostfix()
+        else { throw BinaryExpressionError.notValid }
+    
+    var mainOperator: T? = nil
+    if case .binaryOperator(let concrete) = postfix.last {
+        mainOperator = concrete
+    }
+    
+    return (Array(expression), mainOperator)
+}

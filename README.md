@@ -45,7 +45,8 @@ The public API add functionalities to `Collection<BinaryOperatorExpressionToken<
 * validation/conversion of its content to an expression in either infix or postfix expression via:
     * `validInfix()` 
     * `validPostfix`
-* combination into a postfix expression of its content via an operation with another expression via `postfixCombining(using:with:)`
+* combination into a postfix expression of its content by an operation with another expression via `postfix(by:with:)`
+* combination into an infix expression of its content by an operation with another expression via `infix(by:with)`
 *  evaluation of its content into the result for the represented expression via `evaluate()` —available when certain criteria are met.
 * codability via `Codable` protocol of the expression —available when certain criteria are met.
 
@@ -117,11 +118,12 @@ That is, given a collection of tokens whose order is a valid infix notation expr
 
 On the other hand given a collection of tokens whose order is a valid postfix notation expression, `validInfix()` will return an array containing the same elements, but with their order changed —eventually with parenthesis tokens added when needed—, to form the equivalent expression in infix notation. While calling `validPostfix()` will return an array containing the same elements in the same order of the callee collection.
 
-### Combining two postfix expressions into one
+### Combining two expressions into one
+#### `postfix(by:with:)`
 Building up a postfix expression could be a tricky task, since we are generally more used to work with the infix notation.
 On the other hand postfix notation is way much easier for keeping track on how a binary expression is evaluated.
 
-The method `postfixCombing(using:with:)` it's a useful tool for building up expressions in postfix notation: by providing an operator and another valid expression —in either infix or postfix notation. 
+The method `postfix(by:with:)` it's a useful tool for building up expressions in postfix notation: by providing an operator and another valid expression —in either infix or postfix notation. 
 Both expressions will be turned into postfix notation and used as operands for the given operator, forming a unique valid postfix expression.
 
 That is, given:
@@ -132,13 +134,29 @@ That is, given:
 * `let rhs = [c, d, operatorY]` as another valid postfix expression
 
 when: 
-* `let new = try! lhs.postfixCombinig(using: operatorZ, with: rhs)`
+* `let new = try! lhs.postfix(by: operatorZ, with: rhs)`
 
 then: 
 * `assert(new == [a, b, operatorX, c, d, operatorY, operatorZ])`
 * `let isNewValid = (new.validPostfix() != nil)`
-* `assert(isValid == true)`
+* `assert(isNewValid == true)`
 
+#### `postfix(by:with:)`
+The API also provides the counterpart method for combinig two expressions into a valid one in infix notation by using them as operands of an operation.
+
+That is, given:
+* `a, b, c, d` as operand tokens 
+* `operatorX, operatorY, operatorZ` as operator tokens, with this priority order: `operatorX = operatorY, < operatorZ`
+* `zOperation` as the concrete instance of `BinaryOperatorProtocol` associated to token `operatorZ`
+* `let lhs = [a, b, operatorX]` as a valid postfix expression
+* `let rhs = [c, d, operatorY]` as another valid postfix expression
+
+when: 
+* `let new = try! lhs.infix(by: operatorZ, with: rhs)`
+then: 
+* `assert(new == [openingBracket, a, operatorX, b, .closingBracket, operatorZ, openingBracket, c, operatorY, d, .closingBracket])`
+* `let isNewValid = (new.validinfix() != nil)`
+* `assert(isNewValid == true)`
 
 ### Errors
 #### Validation errors
@@ -147,10 +165,14 @@ The type of error thrown in those circumstances is `BinaryExpressionError`, spec
 
 Listed below are the API methods introduced on `Collection` that might throw a `BinaryExpressionError.notValid`: 
 
-* `postfixCombinig(using:with:)`
+* `postfix(by:with:)`
+* `infix(by:with:)`
 * `evaluate()` 
 
-Both methods need to perform a validation of the expression(s), in order to be able to compute their result. 
+These methods need to perform a validation of the expression(s), in order to be able to compute their result. 
+
+In particular both `postfix(by:with:)` and `infix(by:with:)` will also throw the error when either the callee or the expression given in the `with:` parameter is empty. 
+That is, we can't create a valid postfix or infix expression by combining by an operator two operands when one is —or both are— empty expressions.
 
 #### Evaluation errors
 During the evaluation of an expression, when the expression is valid, an operator might fail and throw an error.

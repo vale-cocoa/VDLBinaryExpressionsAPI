@@ -10,14 +10,25 @@
 import XCTest
 @testable import VDLBinaryExpressionsAPI
 
-final class API_postfixCombiningTests: XCTestCase {
+final class API_postfixByWithTests: XCTestCase {
     typealias Token = BinaryOperatorExpressionToken<MockBinaryOperator>
     
     // MARK: - Properties
     var sut: (lhs: [Token], rhs: [Token])!
     var validPostfixReturnedValueForBoth: Bool {
         (sut.lhs.validPostfix() != nil) && (sut.rhs.validPostfix() != nil)
-        }
+    }
+    
+    var validPostfixReturnedNotEmptyValueForBoth: Bool {
+        guard
+            let lhsPostfix = sut.lhs.validPostfix(),
+            let rhsPostfix = sut.rhs.validPostfix(),
+            !lhsPostfix.isEmpty,
+            !rhsPostfix.isEmpty
+            else { return false }
+        
+        return true
+    }
     
     // MARK: - Test lifecycle
     override func setUp() {
@@ -32,6 +43,15 @@ final class API_postfixCombiningTests: XCTestCase {
     }
     
     // MARK: - Given
+    func givenEmptySUT() {
+        sut = ([], [])
+    }
+    
+    func givenLhsExpressionEmptyRhsValid() {
+        let rhs: [Token] = [.operand(30), .operand(40), .binaryOperator(.add)]
+        sut = ([], rhs)
+    }
+    
     func givenValidSUT() {
         let lhs: [Token] = [.operand(10), .operand(20), .binaryOperator(.add)]
         let rhs: [Token] = [.operand(30), .operand(40), .binaryOperator(.add)]
@@ -45,6 +65,14 @@ final class API_postfixCombiningTests: XCTestCase {
     }
     
     // MARK: - When
+    func whenExpressionsBothEmpty() {
+        givenEmptySUT()
+    }
+    
+    func whenOneExpressionEmptyOtherValid() {
+        givenLhsExpressionEmptyRhsValid()
+    }
+    
     func whenValidPostfixReturnsNilForOneExpression() {
         givenNotValidSUT()
     }
@@ -59,32 +87,55 @@ final class API_postfixCombiningTests: XCTestCase {
         whenValidPostfixReturnsNilForOneExpression()
         
         XCTAssertFalse(validPostfixReturnedValueForBoth)
-        XCTAssertThrowsError(try sut.lhs.postfixCombining(using: .multiply, with: sut.rhs))
+        XCTAssertThrowsError(try sut.lhs.postfix(by: .multiply, with: sut.rhs))
     }
     
-    func test_whenValidPostfixReturnsValueForBothExpressions_doesntThrow() {
+    func test_whenOneExpressionEmptyOtherValid_throws() {
+        // when
+        whenOneExpressionEmptyOtherValid()
+        
+        // then
+        XCTAssertTrue(validPostfixReturnedValueForBoth)
+        XCTAssertFalse(validPostfixReturnedNotEmptyValueForBoth)
+        XCTAssertThrowsError(try sut.lhs.postfix(by: .multiply, with: sut.rhs))
+    }
+    
+    func test_whenBothExpressionEmpty_throws() {
+        // when
+        whenExpressionsBothEmpty()
+        
+        // then
+        XCTAssertTrue(validPostfixReturnedValueForBoth)
+        XCTAssertFalse(validPostfixReturnedNotEmptyValueForBoth)
+        XCTAssertThrowsError(try sut.lhs.postfix(by: .multiply, with: sut.rhs))
+    }
+    
+    func test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_doesntThrow() {
         // when
         whenValidPostfixReturnsValueForBothExpressions()
         
         // then
         XCTAssertTrue(validPostfixReturnedValueForBoth)
-        XCTAssertNoThrow(try sut.lhs.postfixCombining(using: .multiply, with: sut.rhs))
+        XCTAssertTrue(validPostfixReturnedNotEmptyValueForBoth)
+        XCTAssertNoThrow(try sut.lhs.postfix(by: .multiply, with: sut.rhs))
     }
     
-    func test_whenValidPostfixReturnsValueForBothExpressions_ReturnsConcatenatingLHSWithRHSWithOperatorAsToken() {
+    func test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_ReturnsConcatenatingLHSWithRHSWithOperatorAsToken() {
         // when
         whenValidPostfixReturnsValueForBothExpressions()
         let operation: MockBinaryOperator = .multiply
         let expectedResult: [Token] = sut.lhs + sut.rhs + [.binaryOperator(operation)]
         
         // then
-        XCTAssertEqual(try! sut.lhs.postfixCombining(using: .multiply, with: sut.rhs), expectedResult)
+        // guaranted by test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_doesntThrow()
+        XCTAssertEqual(try! sut.lhs.postfix(by: .multiply, with: sut.rhs), expectedResult)
     }
     
-    func test_whenValidPostfixReturnsValueForBothExpressions_ReturnsValidPostfixExpression() {
+    func test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_ReturnsValidPostfixExpression() {
         // when
         whenValidPostfixReturnsValueForBothExpressions()
-        let result = try! sut.lhs.postfixCombining(using: .multiply, with: sut.rhs)
+        // guaranted by test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_doesntThrow()
+        let result = try! sut.lhs.postfix(by: .multiply, with: sut.rhs)
         
         // then
         XCTAssertTrue(_isValidPostfixNotation(expression: result))
@@ -92,9 +143,11 @@ final class API_postfixCombiningTests: XCTestCase {
     
     var allTests = [
         ("test_whenValidPostfixReturnsNilForOneExpression_throws", test_whenValidPostfixReturnsNilForOneExpression_throws),
-        ("test_whenValidPostfixReturnsValueForBothExpressions_doesntThrow", test_whenValidPostfixReturnsValueForBothExpressions_doesntThrow),
-        ("test_whenValidPostfixReturnsValueForBothExpressions_ReturnsConcatenatingLHSWithRHSWithOperatorAsToken", test_whenValidPostfixReturnsValueForBothExpressions_ReturnsConcatenatingLHSWithRHSWithOperatorAsToken),
-        ("test_whenValidPostfixReturnsValueForBothExpressions_ReturnsValidPostfixExpression", test_whenValidPostfixReturnsValueForBothExpressions_ReturnsValidPostfixExpression),
+        ("test_whenOneExpressionEmptyOtherValid_throws", test_whenOneExpressionEmptyOtherValid_throws),
+        ("test_whenBothExpressionEmpty_throws", test_whenBothExpressionEmpty_throws),
+        ("test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_doesntThrow", test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_doesntThrow),
+        ("test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_ReturnsConcatenatingLHSWithRHSWithOperatorAsToken", test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_ReturnsConcatenatingLHSWithRHSWithOperatorAsToken),
+        ("test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_ReturnsValidPostfixExpression", test_whenValidPostfixReturnsNotEmptyValueForBothExpressions_ReturnsValidPostfixExpression),
         
     ]
 }
