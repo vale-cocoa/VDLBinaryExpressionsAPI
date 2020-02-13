@@ -54,10 +54,12 @@ extension Collection {
     public func infix<C: Collection, T: BinaryOperatorProtocol>(by operation: T, with rhs: C) throws -> [Self.Iterator.Element]
         where C.Iterator.Element == Self.Iterator.Element, Self.Iterator.Element == BinaryOperatorExpressionToken<T>
     {
-        let lhsSubInfix = try _addBracketsIfNeeded(subInfix: try _subInfix(from: self), otherOperator: operation)
-        let rhsSubInfix = try _addBracketsIfNeeded(subInfix: try _subInfix(from: rhs), otherOperator: operation)
+        let lhsSubInfix = try _subInfix(from: self)
+        let rhsSubInfix = try _subInfix(from: rhs)
         
-        return lhsSubInfix.expression + [.binaryOperator(operation)] + rhsSubInfix.expression
+        let result = try _subInfix(lhs: lhsSubInfix, by: operation, rhs: rhsSubInfix)
+        
+        return result.expression
     }
     
     /// Combines with the given not empty `Collection` of `BinaryOperatorExpressionToken` into a valid binary operation expression in postfix notation using the given operation.
@@ -163,17 +165,13 @@ func _convertFromRPNToInfix<C: Collection, T: BinaryOperatorProtocol>(expression
                 let lhs = stack.popLast()
                 else { throw BinaryExpressionError.notValid }
             
-            // Add brackets to the two subinfix according
-            // to comparsions between this operand
-            // and their main operator associativity and priority.
-            let subLhs = try _addBracketsIfNeeded(subInfix: lhs, otherOperator: op)
-            let subRhs = try _addBracketsIfNeeded(subInfix: rhs, otherOperator: op)
             // Create a new subinfix combining the two subinfix from
-            // the stack and this operator.
+            // the stack and this operator and add brackets to them
+            // when needed.
+            let subResult = try _subInfix(lhs: lhs, by: op, rhs: rhs)
+            
             // Then put it in the stack.
-            let subExpression = subLhs.expression + [token] + subRhs.expression
-            let sub = (expression: subExpression, mainOperator: op)
-            stack.append(sub)
+            stack.append(subResult)
         case .openingBracket:
             fallthrough
         case .closingBracket:
@@ -466,37 +464,10 @@ func _eval<C: Collection, T: BinaryOperatorProtocol>(postfix: C, shouldThrowOnFa
     return stack.popLast()
 }
 
-/// Assumes that when `mainOperator != nil` it is really equal to the main operator of the `expression`.
-/// Assumption is true while this type and the function
-/// `_addBracketsIfNeeded(subInfix:otherOperator:)` are used inside this API.
+// MARK: - Sub Infix
 typealias _SubInfixExpression<T: BinaryOperatorProtocol> = (expression: [BinaryOperatorExpressionToken<T>], mainOperator: T?)
 
-func _addBracketsIfNeeded<T: BinaryOperatorProtocol>(subInfix: _SubInfixExpression<T>, otherOperator: T) throws ->  _SubInfixExpression<T> {
-    guard
-        let subMainOp = subInfix.mainOperator
-        else {
-            guard
-                subInfix.expression.count == 1,
-                case .operand = subInfix.expression.first!
-                else { throw BinaryExpressionError.notValid }
-            
-            return subInfix
-    }
-    
-    guard
-        subInfix.expression.count > 1,
-        _isValidInfixNotation(expression: subInfix.expression)
-        else { throw BinaryExpressionError.notValid }
-    
-    guard
-        subMainOp.priority < otherOperator.priority
-        else { return subInfix }
-    
-    let newInfix: [BinaryOperatorExpressionToken<T>] = [.openingBracket] + subInfix.expression + [.closingBracket]
-    
-    return (expression: newInfix, mainOperator: subInfix.mainOperator)
-}
-
+// TODO: TESTS!
 func _subInfix<C: Collection, T: BinaryOperatorProtocol>(from expression: C) throws -> _SubInfixExpression<T>
     where C.Iterator.Element == BinaryOperatorExpressionToken<T>
 {
@@ -516,3 +487,68 @@ func _subInfix<C: Collection, T: BinaryOperatorProtocol>(from expression: C) thr
     
     return (Array(expression), mainOperator)
 }
+
+// TODO: TESTS!
+func _subInfix<T>(lhs: _SubInfixExpression<T>, by operation: T, rhs:  _SubInfixExpression<T>) throws -> _SubInfixExpression<T>
+    where T: BinaryOperatorProtocol {
+        typealias SubInfix = _SubInfixExpression<T>
+        typealias Token = BinaryOperatorExpressionToken<T>
+        guard
+            !lhs.expression.isEmpty,
+            !rhs.expression.isEmpty,
+            _isValidInfixNotation(expression: lhs.expression),
+            _isValidInfixNotation(expression: rhs.expression)
+            else { throw BinaryExpressionError.notValid }
+        
+        func _putBrackets(on infixExpression: [Token])
+            -> [Token]
+        {
+            if infixExpression.count == 1
+            {
+                return infixExpression
+            } else if
+                case .openingBracket = infixExpression.first!,
+                case .closingBracket = infixExpression.last!
+            {
+                return infixExpression
+            }
+            
+            return [.openingBracket] + infixExpression + [.closingBracket]
+        }
+        
+        var lhsExpr = lhs.expression
+        var rhsExpr = rhs.expression
+        switch (lhs.mainOperator?.associativity, operation.associativity, rhs.mainOperator?.associativity) {
+        // lhs and rhs are both operand
+        case (nil, _, nil):
+            break
+        
+        // lhs is operand, rhs is expression.
+        case (nil, .left, .some(_)):
+            rhsExpr = operation.priority > rhs.mainOperator!.priority ? _putBrackets(on: rhs.expression) : rhs.expression
+        case (nil, .right, .some(_)):
+            rhsExpr = operation.priority >= rhs.mainOperator!.priority ? _putBrackets(on: rhs.expression) : rhs.expression
+        
+        // lhs is expression, rhs is operand.
+        case (.some(_), _, nil):
+            lhsExpr = operation.priority > lhs.mainOperator!.priority ? _putBrackets(on: lhs.expression) : lhs.expression
+        
+        // lhs and rhs are expressions.
+        // Operation is left associative
+        case (.some(_), .left, .some(_)):
+            lhsExpr = operation.priority > lhs.mainOperator!.priority ? _putBrackets(on: lhs.expression) : lhs.expression
+            rhsExpr = operation.priority > rhs.mainOperator!.priority ? _putBrackets(on: rhs.expression) : rhs.expression
+        
+        // lhs and rhs are expressions.
+        // Operation is right associative
+        case (.some(_), .right, .some(_)):
+            lhsExpr = operation.priority > lhs.mainOperator!.priority ? _putBrackets(on: lhs.expression) : lhs.expression
+            rhsExpr = operation.priority >= rhs.mainOperator!.priority ? _putBrackets(on: rhs.expression) : rhs.expression
+        }
+        
+        let combinedExpression: [Token] = lhsExpr + [.binaryOperator(operation)] + rhsExpr
+        
+        return (combinedExpression, operation)
+}
+
+
