@@ -15,16 +15,19 @@ extension Int: RepresentableAsEmptyProtocol {
         return 0
     }
     
-    public var isEmpty: Bool { return self == 0 }
+    public var isEmpty: Bool { return self == Int.empty() }
 }
 
 enum MockBinaryOperator: BinaryOperatorProtocol, Equatable, CaseIterable {
     case add
     case multiply
+    case subtract
+    case divide
     case failingOperation
     
     enum Error: Swift.Error {
         case failedOperation
+        case divisionByZero
     }
     
     // MARK: - BinaryOperatorProtocol Conformance
@@ -36,6 +39,16 @@ enum MockBinaryOperator: BinaryOperatorProtocol, Equatable, CaseIterable {
             return { lhs, rhs in return lhs + rhs }
         case .multiply:
             return { lhs, rhs in return lhs * rhs}
+        case .subtract:
+            return { lhs, rhs in return lhs - rhs }
+        case .divide:
+            return { lhs, rhs in
+                guard
+                    !rhs.isEmpty
+                    else { throw Error.divisionByZero }
+                
+                return lhs / rhs
+            }
         case .failingOperation:
             fallthrough
         @unknown default:
@@ -43,18 +56,29 @@ enum MockBinaryOperator: BinaryOperatorProtocol, Equatable, CaseIterable {
         }
     }
     
-    var associativity: BinaryOperatorAssociativity { return self ~=  .failingOperation ? .right : .left }
+    var associativity: BinaryOperatorAssociativity {
+        switch self {
+        case .add, .multiply:
+            return .left
+        case .subtract, .divide, .failingOperation:
+            return .right
+        }
+    }
     
     var priority: Int {
         switch self {
         case .add:
             return 30
-        case . multiply:
+        case .multiply:
+            return 50
+        case .subtract:
+            return 30
+        case .divide:
             return 50
         case .failingOperation:
             fallthrough
         @unknown default:
-            return 9
+            return 0
         }
     }
 }
@@ -67,6 +91,10 @@ extension MockBinaryOperator: CustomStringConvertible {
             return "+"
         case .multiply:
             return "*"
+        case .subtract:
+            return "-"
+        case .divide:
+            return "/"
         case .failingOperation:
             return "ƒ"
         }
@@ -81,17 +109,23 @@ extension MockBinaryOperator: CustomDebugStringConvertible {
 
 extension MockBinaryOperator: Codable {
     enum Base: String, Codable {
-        case add
-        case multiply
-        case failingOperation
+        case addition
+        case multiplication
+        case subtraction
+        case division
+        case justFail
         
         fileprivate func _concrete() -> MockBinaryOperator {
             switch self {
-            case .add:
+            case .addition:
                 return .add
-            case .multiply:
+            case .multiplication:
                 return .multiply
-            case .failingOperation:
+            case .subtraction:
+                return .subtract
+            case .division:
+                return .divide
+            case .justFail:
                 return .failingOperation
             }
         }
@@ -101,11 +135,15 @@ extension MockBinaryOperator: Codable {
     fileprivate func _base() -> Base {
         switch self {
         case .add:
-            return .add
+            return .addition
         case .multiply:
-            return .multiply
+            return .multiplication
+        case .subtract:
+            return .subtraction
+        case .divide:
+            return .division
         case .failingOperation:
-            return .failingOperation
+            return .justFail
         }
     }
     
