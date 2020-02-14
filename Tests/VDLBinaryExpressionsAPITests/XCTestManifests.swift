@@ -7,6 +7,8 @@ public func allTests() -> [XCTestCaseEntry] {
         testCase(BinaryOperatorProtocolTests.allTests),
         testCase(BinaryOperatorExpressionTokenTests.allTests),
         testCase(RepresentableAsEmptyProtocolTests.allTests),
+        testCase(API_subInfixFromInfixTests.allTests),
+        testCase(API_subInfixLhsByRhsTests.allTests),
         testCase(API_evalTests.allTests),
         testCase(API_validateInfixChunckTests.allTests),
         testCase(API_convertToRPNTests.allTests),

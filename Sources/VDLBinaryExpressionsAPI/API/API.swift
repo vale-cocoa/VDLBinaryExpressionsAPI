@@ -44,7 +44,7 @@ extension Collection {
         
         return try? _convertFromRPNToInfix(expression: self)
     }
-    /// Combines wuth the given non empty `Collection` of `BinaryExpressionToken` into a valid binary expression in infix notation using the given operator.
+    /// Combines with the given non empty `Collection` of `BinaryExpressionToken` into a valid binary expression in infix notation using the given operator.
     ///
     /// - parameter by: the binary operation to use as operator
     /// - parameter with: another not empty `Collection` of `BinaryOperatorExpressionToken` to combine with, used as righmost operand. It can be either in postfix or infix notation.
@@ -54,8 +54,8 @@ extension Collection {
     public func infix<C: Collection, T: BinaryOperatorProtocol>(by operation: T, with rhs: C) throws -> [Self.Iterator.Element]
         where C.Iterator.Element == Self.Iterator.Element, Self.Iterator.Element == BinaryOperatorExpressionToken<T>
     {
-        let lhsSubInfix = try _subInfix(from: self)
-        let rhsSubInfix = try _subInfix(from: rhs)
+        let lhsSubInfix = try _subInfix(fromInfix: self)
+        let rhsSubInfix = try _subInfix(fromInfix: rhs)
         
         let result = try _subInfix(lhs: lhsSubInfix, by: operation, rhs: rhsSubInfix)
         
@@ -464,31 +464,65 @@ func _eval<C: Collection, T: BinaryOperatorProtocol>(postfix: C, shouldThrowOnFa
     return stack.popLast()
 }
 
-// MARK: - Sub Infix
+// MARK: - SubInfixExpression
 typealias _SubInfixExpression<T: BinaryOperatorProtocol> = (expression: [BinaryOperatorExpressionToken<T>], mainOperator: T?)
 
-// TODO: TESTS!
-func _subInfix<C: Collection, T: BinaryOperatorProtocol>(from expression: C) throws -> _SubInfixExpression<T>
+func _subInfix<C: Collection, T: BinaryOperatorProtocol>(fromInfix expression: C) throws -> _SubInfixExpression<T>
     where C.Iterator.Element == BinaryOperatorExpressionToken<T>
 {
+    // Early return in case expression is empty
     guard
         !expression.isEmpty
         else {
             return ([], nil) }
     
+    // Early check on expression validity
     guard
         let postfix = expression.validPostfix()
         else { throw BinaryExpressionError.notValid }
     
+    // Early return in case expression was just an operand.
+    if postfix.count == 1 { return ([postfix.first!], nil) }
+    
+    // Check if given expression is a postfix.
+    // Here the expression was already checked as being valid
+    // and containing an operation rather than just an operand.
+    // We throw an error if it was given in postfix expression,
+    // since we use this method for building infix expressions from
+    // postfix.
+    guard
+        !_isValidPostfixNotation(expression: expression)
+        else { throw BinaryExpressionError.notValid }
+    
+    // Get the main operator of the infix expression:
     var mainOperator: T? = nil
     if case .binaryOperator(let concrete) = postfix.last {
         mainOperator = concrete
+    } else {
+        // This branch should never execute.
+        fatalError("The postfix conversion didn't had an operator as its last token.")
     }
     
+    // return result
     return (Array(expression), mainOperator)
 }
 
 // TODO: TESTS!
+// Maybe it should also check for validity of given SubInfix…
+// which means convert its expression to postfix,
+// get if exits the main operator from the postfix expression
+// and compare it with the one stored in the subinfix…
+// …which can be done only when T: Equatable, meaning it wouldn't
+// be useful at all!
+// The problem is that to test these methods on this type,
+// stuff has to be internal, otherwise I would have this stuff
+// private… I might as well do that later on.
+// Oh wait… I got it! I could make things different for the
+// master and develop branches… Is that even possible?
+// The idea is: have the master branch keep this stuff private,
+// hence in it only major tests for the public API will exist
+// then have the development branch keeping this stuff internal
+// with their tests…
 func _subInfix<T>(lhs: _SubInfixExpression<T>, by operation: T, rhs:  _SubInfixExpression<T>) throws -> _SubInfixExpression<T>
     where T: BinaryOperatorProtocol {
         typealias SubInfix = _SubInfixExpression<T>
