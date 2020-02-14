@@ -234,7 +234,7 @@ final class API_subInfixFromInfixTests: XCTestCase {
         }
     }
     
-    var allTests = [
+    static var allTests = [
         ("test_whenEmptyExpression_doesntThrow", test_whenEmptyExpression_doesntThrow),
         ("test_whenEmpty_returnsEmptyExpressionAndNilMainOperator", test_whenEmpty_returnsEmptyExpressionAndNilMainOperator),
         ("test_whenValidPostfixReturnsNil_throws", test_whenValidPostfixReturnsNil_throws),

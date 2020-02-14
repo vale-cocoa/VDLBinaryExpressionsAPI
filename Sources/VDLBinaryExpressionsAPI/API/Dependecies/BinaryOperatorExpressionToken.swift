@@ -19,6 +19,25 @@ public enum BinaryOperatorExpressionToken<T> where T: BinaryOperatorProtocol {
     case operand(Operand)
     case binaryOperator(Operator)
     
+    var isOpeningBracket: Bool {
+        if case .openingBracket = self { return true }
+        return false
+    }
+    
+    var isClosingBracket: Bool {
+        if case .closingBracket = self { return true }
+        return false
+    }
+    
+    var isOperand: Bool {
+        if case .operand(_) = self { return true }
+        return false
+    }
+    
+    var isBinaryOperator: Bool {
+        if case .binaryOperator(_) = self { return true }
+        return false
+    }
 }
 
 // MARK: - CustomStringConvertible conformance

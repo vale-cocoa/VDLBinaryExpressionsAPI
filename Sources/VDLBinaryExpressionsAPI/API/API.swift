@@ -525,30 +525,32 @@ func _subInfix<C: Collection, T: BinaryOperatorProtocol>(fromInfix expression: C
 // with their tests…
 func _subInfix<T>(lhs: _SubInfixExpression<T>, by operation: T, rhs:  _SubInfixExpression<T>) throws -> _SubInfixExpression<T>
     where T: BinaryOperatorProtocol {
+        // Helpers in function's scope
         typealias SubInfix = _SubInfixExpression<T>
+        
         typealias Token = BinaryOperatorExpressionToken<T>
-        guard
-            !lhs.expression.isEmpty,
-            !rhs.expression.isEmpty,
-            _isValidInfixNotation(expression: lhs.expression),
-            _isValidInfixNotation(expression: rhs.expression)
-            else { throw BinaryExpressionError.notValid }
         
         func _putBrackets(on infixExpression: [Token])
             -> [Token]
         {
-            if infixExpression.count == 1
-            {
-                return infixExpression
-            } else if
-                case .openingBracket = infixExpression.first!,
-                case .closingBracket = infixExpression.last!
+            let firstClosingBracketIndex = infixExpression
+                .firstIndex(where: { $0.isClosingBracket  })
+            if
+                (infixExpression.count <= 1) || (infixExpression.first!.isOpeningBracket &&  firstClosingBracketIndex == infixExpression.endIndex - 1)
             {
                 return infixExpression
             }
             
             return [.openingBracket] + infixExpression + [.closingBracket]
         }
+        // End of helpers in function's scope
+        
+        guard
+            !lhs.expression.isEmpty,
+            !rhs.expression.isEmpty,
+            _isValidInfixNotation(expression: lhs.expression),
+            _isValidInfixNotation(expression: rhs.expression)
+            else { throw BinaryExpressionError.notValid }
         
         var lhsExpr = lhs.expression
         var rhsExpr = rhs.expression
@@ -584,5 +586,4 @@ func _subInfix<T>(lhs: _SubInfixExpression<T>, by operation: T, rhs:  _SubInfixE
         
         return (combinedExpression, operation)
 }
-
 

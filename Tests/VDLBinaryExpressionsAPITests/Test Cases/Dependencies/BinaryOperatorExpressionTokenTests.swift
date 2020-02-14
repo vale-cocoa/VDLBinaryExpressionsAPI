@@ -37,6 +37,70 @@ final class BinaryOperatorExpressionTokenTests: XCTestCase {
         }
     }
     
+    func test_isOpeningBracket() {
+        sut = .openingBracket
+        XCTAssertTrue(sut.isOpeningBracket)
+        
+        sut = .operand(Int.random(in: 1...100))
+        XCTAssertFalse(sut.isOpeningBracket)
+        
+        for anOp in MockBinaryOperator.allCases {
+            sut = .binaryOperator(anOp)
+            XCTAssertFalse(sut.isOpeningBracket)
+        }
+        
+        sut = .closingBracket
+        XCTAssertFalse(sut.isOpeningBracket)
+    }
+    
+    func test_isClosingBracket() {
+        sut = .closingBracket
+        XCTAssertTrue(sut.isClosingBracket)
+        
+        sut = .operand(Int.random(in: Int.min...Int.max))
+        XCTAssertFalse(sut.isClosingBracket)
+        
+        sut = .openingBracket
+        XCTAssertFalse(sut.isClosingBracket)
+        
+        for anOp in MockBinaryOperator.allCases {
+            sut = .binaryOperator(anOp)
+            XCTAssertFalse(sut.isClosingBracket)
+        }
+    }
+    
+    func test_isOperand() {
+        sut = .operand(Int.random(in: Int.min...Int.max))
+        XCTAssertTrue(sut.isOperand)
+        
+        sut = .openingBracket
+        XCTAssertFalse(sut.isOperand)
+        
+        sut = .closingBracket
+        XCTAssertFalse(sut.isOperand)
+        
+        for anOp in MockBinaryOperator.allCases {
+            sut = .binaryOperator(anOp)
+            XCTAssertFalse(sut.isOperand)
+        }
+    }
+    
+    func test_isBinaryOperator() {
+        for anOp in MockBinaryOperator.allCases {
+            sut = .binaryOperator(anOp)
+            XCTAssertTrue(sut.isBinaryOperator)
+        }
+        
+        sut = .operand(Int.random(in: Int.min...Int.max))
+        XCTAssertFalse(sut.isBinaryOperator)
+     
+        sut = .openingBracket
+        XCTAssertFalse(sut.isBinaryOperator)
+        
+        sut = .closingBracket
+        XCTAssertFalse(sut.isBinaryOperator)
+    }
+    
     func test_equatable() {
         // when
         sut = .openingBracket
@@ -153,6 +217,10 @@ final class BinaryOperatorExpressionTokenTests: XCTestCase {
     
     static var allTests = [
         ("test_cases", test_cases),
+        ("test_isOpeningBracket", test_isOpeningBracket),
+        ("test_isClosingBracket", test_isClosingBracket),
+        ("test_isOperand", test_isOperand),
+        ("test_isBinaryOperator", test_isBinaryOperator),
         ("test_equatable", test_equatable),
         ("test_Codable_encode_doesntThrow", test_Codable_encode_doesntThrow),
         ("test_Codable_decode_doesntThrow", test_Codable_decode_doesntThrow),
