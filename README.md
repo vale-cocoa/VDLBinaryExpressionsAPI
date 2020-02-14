@@ -141,7 +141,7 @@ then:
 * `let isNewValid = (new.validPostfix() != nil)`
 * `assert(isNewValid == true)`
 
-#### `postfix(by:with:)`
+#### `infix(by:with:)`
 The API also provides the counterpart method for combinig two expressions into a valid one in infix notation by using them as operands of an operation.
 
 That is, given:
