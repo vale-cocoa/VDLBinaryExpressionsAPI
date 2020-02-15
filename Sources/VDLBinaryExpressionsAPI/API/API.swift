@@ -428,7 +428,7 @@ func _eval<C: Collection, T: BinaryOperatorProtocol>(postfix: C, shouldThrowOnFa
                 // calculate the result of this operation
                 partial = try binaryOp.binaryOperation(lhs, rhs)
             } catch {
-                // the opration failed…
+                // the operation failed…
                 // …throw its error in case the caller had
                 // flagged to do so.
                 guard
@@ -436,7 +436,7 @@ func _eval<C: Collection, T: BinaryOperatorProtocol>(postfix: C, shouldThrowOnFa
                     else { throw error }
                 
                 // otherwise record that an operation failed
-                // and use an operand as dummy result.
+                // and use an operand as dummy partial result.
                 anOperatorFailed = true
                 partial = lhs
             }
