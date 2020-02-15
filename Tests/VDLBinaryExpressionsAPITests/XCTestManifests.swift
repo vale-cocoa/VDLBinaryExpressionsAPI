@@ -17,6 +17,7 @@ public func allTests() -> [XCTestCaseEntry] {
         testCase(API_isValidPostfixNotationTests.allTests),
         testCase(API_evaluateTests.allTests),
         testCase(API_postfixByWithTests.allTests),
+        testsCase(API_infixByWithTests.allTests),
         testCase(API_validInfixTests.allTests),
         testCase(API_validPostfixTests.allTests),
         

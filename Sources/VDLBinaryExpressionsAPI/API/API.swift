@@ -44,6 +44,7 @@ extension Collection {
         
         return try? _convertFromRPNToInfix(expression: self)
     }
+    
     /// Combines with the given non empty `Collection` of `BinaryExpressionToken` into a valid binary expression in infix notation using the given operator.
     ///
     /// - parameter by: the binary operation to use as operator
@@ -54,8 +55,15 @@ extension Collection {
     public func infix<C: Collection, T: BinaryOperatorProtocol>(by operation: T, with rhs: C) throws -> [Self.Iterator.Element]
         where C.Iterator.Element == Self.Iterator.Element, Self.Iterator.Element == BinaryOperatorExpressionToken<T>
     {
-        let lhsSubInfix = try _subInfix(fromInfix: self)
-        let rhsSubInfix = try _subInfix(fromInfix: rhs)
+        guard
+            let lhsInfix = self.validInfix(),
+            let rhsInfix = rhs.validInfix()
+            else { throw BinaryExpressionError.notValid }
+        
+        // SAFE not to test for throwing cause it should never
+        // throw because of the guard statement preceding
+        let lhsSubInfix = try _subInfix(fromInfix: lhsInfix)
+        let rhsSubInfix = try _subInfix(fromInfix: rhsInfix)
         
         let result = try _subInfix(lhs: lhsSubInfix, by: operation, rhs: rhsSubInfix)
         
@@ -507,22 +515,6 @@ func _subInfix<C: Collection, T: BinaryOperatorProtocol>(fromInfix expression: C
     return (Array(expression), mainOperator)
 }
 
-// TODO: TESTS!
-// Maybe it should also check for validity of given SubInfix…
-// which means convert its expression to postfix,
-// get if exits the main operator from the postfix expression
-// and compare it with the one stored in the subinfix…
-// …which can be done only when T: Equatable, meaning it wouldn't
-// be useful at all!
-// The problem is that to test these methods on this type,
-// stuff has to be internal, otherwise I would have this stuff
-// private… I might as well do that later on.
-// Oh wait… I got it! I could make things different for the
-// master and develop branches… Is that even possible?
-// The idea is: have the master branch keep this stuff private,
-// hence in it only major tests for the public API will exist
-// then have the development branch keeping this stuff internal
-// with their tests…
 func _subInfix<T>(lhs: _SubInfixExpression<T>, by operation: T, rhs:  _SubInfixExpression<T>) throws -> _SubInfixExpression<T>
     where T: BinaryOperatorProtocol {
         // Helpers in function's scope
