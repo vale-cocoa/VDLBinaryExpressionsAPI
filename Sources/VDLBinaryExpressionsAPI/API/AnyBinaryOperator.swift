@@ -18,7 +18,7 @@ public struct AnyBinaryOperator<Operand>: BinaryOperatorProtocol {
     
     /// Creates a type-erased binary operator that wraps the given concrete one.
     ///
-    /// - Parameter base: The concrete binary operator to wrap.
+    /// - Parameter concrete: The concrete binary operator to wrap.
     ///
     /// - Complexity: O(1).
     public init<Concrete: BinaryOperatorProtocol>(_ concrete: Concrete) where Concrete.Operand == Operand {
@@ -36,6 +36,9 @@ public struct AnyBinaryOperator<Operand>: BinaryOperatorProtocol {
     
     // MARK: - Type erasure Base class
     fileprivate class _Base<Operand>: BinaryOperatorProtocol {
+        // None of this code branch shall ever execute,
+        // since it is fileprivate, and this abstract class
+        // is never directly initialized.
         init() {
             guard type(of: self) != _Base.self else {
                 fatalError("Can't create instances of AnyBinaryOperator._Base; create a subclass instance instead")
@@ -77,9 +80,8 @@ extension AnyBinaryOperator {
     /// Creates a type-erased binary operator from given parameters.
     ///
     /// - Parameter ofPriority: The priority value. Defaults to `30`.
-    ///
-    /// - Parameter ofAssociativity: The associativity value. Defaults to`.left`.
-    ///
+    /// - Parameter ofAssociativity: The associativity value.
+    /// Defaults to`.left`.
     /// - Parameter byOperation: The represented binary operation.
     ///
     /// - Complexity: O(1).

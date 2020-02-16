@@ -72,6 +72,10 @@ It also provides the operator priority by its readonly property `priority`,  exp
 
 Finally it provides the associativity direction of the operator, by its readonly property `associativity` of type `BinaryOperatorAssociativity`, an `enum` with two cases: `.left` and `.right`.
 
+#### `AnyBinaryOperator`
+Type erasure on `BinaryOperatorProtocol` is also provided via `AnyBinaryOperator` struct. 
+This type can be initialized either via an istance of a concrete type implementing `BinaryOperatorProtocol`, or by providing a closure —which will be used as the `binaryOperation`—, `associativity` and `priority` values.
+
 ##### `Codable` conformance
 When a concrete type `T` implementing `BinaryOperatorProtocol` and its associated cocrete type `T.Operand` both conform to `Codable`, then the resulting `BinaryExpressionToken<T>` will also provide `Codable` conformance, making possible to encode/decode binary expressions of this kind. 
 
