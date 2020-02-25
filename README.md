@@ -80,7 +80,7 @@ This type can be initialized either via an istance of a concrete type implementi
 When a concrete type `T` implementing `BinaryOperatorProtocol` and its associated cocrete type `T.Operand` both conform to `Codable`, then the resulting `BinaryExpressionToken<T>` will also provide `Codable` conformance, making possible to encode/decode binary expressions of this kind. 
 
 ### Associativity direction for operators: `BinaryOperatorAssociativity`
-This `enum` describes the associativity direction of a binary operator when evaluated an infix expression.
+This `enum` describes the associativity direction of a binary operator when evaluating an infix expression.
 An operator is *left-associative* when the operations are grouped to the left in a chained expression evaluation.
 On the contrary, an operator is *right-associative* when the operations are grouped to the right in a chained expression evaluation.
 
@@ -138,7 +138,7 @@ That is, given:
 * `let rhs = [c, d, operatorY]` as another valid postfix expression
 
 when: 
-* `let new = try! lhs.postfix(by: operatorZ, with: rhs)`
+* `let new = try! lhs.postfix(by: zOperation, with: rhs)`
 
 then: 
 * `assert(new == [a, b, operatorX, c, d, operatorY, operatorZ])`
@@ -156,7 +156,7 @@ That is, given:
 * `let rhs = [c, d, operatorY]` as another valid postfix expression
 
 when: 
-* `let new = try! lhs.infix(by: operatorZ, with: rhs)`
+* `let new = try! lhs.infix(by: zOperation, with: rhs)`
 then: 
 * `assert(new == [openingBracket, a, operatorX, b, .closingBracket, operatorZ, openingBracket, c, operatorY, d, .closingBracket])`
 * `let isNewValid = (new.validinfix() != nil)`
@@ -176,12 +176,12 @@ Listed below are the API methods introduced on `Collection` that might throw a `
 These methods need to perform a validation of the expression(s), in order to be able to compute their result. 
 
 In particular both `postfix(by:with:)` and `infix(by:with:)` will also throw the error when either the callee or the expression given in the `with:` parameter is empty. 
-That is, we can't create a valid postfix or infix expression by combining by an operator two operands when one is —or both are— empty expressions.
+That is, we can't create a valid postfix or infix expression combining by an operator two operands when one is an empty expression—or both are empty expressions.
 
 #### Evaluation errors
 During the evaluation of an expression, when the expression is valid, an operator might fail and throw an error.
 
-`evaluate()` will rethrow the `Error` thrown by the concrete type of `BinaryOperatorProtocol` associated to the expression token, when a binary operation fails while being applied to the operands in the expression during the result calculation. 
+`evaluate()` will rethrow the `Error` thrown by the concrete type of `BinaryOperatorProtocol` associated to the expression token, when a binary operation fails while being applied to the operands in the expression during the evaluation process. 
 
 Note that `evaluate()` method will perform a validation check on the expresison before starting the result calcultaion, hence the validation error has priority over the failing operator error.
 
