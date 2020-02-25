@@ -4,7 +4,7 @@ An API for working with associative binary operation expressions.
 
 ## Introduction 
 ### Binary associative operations
-Given A binary operation *f(T, T) -> T*, represented by the the operator `<*>` it said to be associative if for all `a,b,c` contained in *T* we have that `a <*> (b <*> c) = (a <*> b) <*> c`.
+Given a binary operation *f(T, T) -> T*, represented by the the operator `<*>` it is said to be associative if for all `a,b,c` contained in *T* we have that `a <*> (b <*> c) = (a <*> b) <*> c`.
 
 ### Expressions and notations
 Expressions representing binary operations on operands can be in either *infix* notation or *postfix* notation (a.k.a. Reverse Polish Notation). The latter is mainly used in computational systems.

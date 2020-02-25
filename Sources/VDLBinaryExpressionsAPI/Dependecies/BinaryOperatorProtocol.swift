@@ -8,13 +8,16 @@
 //
 
 import Foundation
+/// Binary operation functional type.
+public typealias BinaryOperation<T> = (T, T) throws -> T
+
 /// A protocol defining a type representing operators for semigroup binary functions executable over its associated type.
 public protocol BinaryOperatorProtocol {
     /// The associated type over which the binary operations are executable.
     associatedtype Operand
     
     /// The binary operation represented by the operator.
-    var binaryOperation: (Operand, Operand) throws -> Operand { get }
+    var binaryOperation: BinaryOperation<Operand> { get }
     
     /// The priority of this operator.
     var priority: Int { get }
@@ -24,7 +27,7 @@ public protocol BinaryOperatorProtocol {
 }
 
 extension BinaryOperatorProtocol {
-    func hasPrecedenceInPostfixConversion(then other: Self) -> Bool {
+    func goesBeforeInPostfixConversion(than other: Self) -> Bool {
         switch other.associativity {
         case .left:
             

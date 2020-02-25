@@ -1,5 +1,5 @@
 //
-//  VDLBinaryExpressionsAPI
+//  VDLBinaryExpressionsAPITests
 //  MockBinaryOperator.swift
 //  
 //
@@ -58,9 +58,9 @@ enum MockBinaryOperator: BinaryOperatorProtocol, Equatable, CaseIterable {
     
     var associativity: BinaryOperatorAssociativity {
         switch self {
-        case .add, .multiply:
+        case .add, .multiply, .divide, .subtract:
             return .left
-        case .subtract, .divide, .failingOperation:
+        case .failingOperation:
             return .right
         }
     }
@@ -76,9 +76,7 @@ enum MockBinaryOperator: BinaryOperatorProtocol, Equatable, CaseIterable {
         case .divide:
             return 50
         case .failingOperation:
-            fallthrough
-        @unknown default:
-            return 0
+            return 100
         }
     }
 }
@@ -113,7 +111,7 @@ extension MockBinaryOperator: Codable {
         case multiplication
         case subtraction
         case division
-        case justFail
+        case failingOperation
         
         fileprivate func _concrete() -> MockBinaryOperator {
             switch self {
@@ -125,7 +123,7 @@ extension MockBinaryOperator: Codable {
                 return .subtract
             case .division:
                 return .divide
-            case .justFail:
+            case .failingOperation:
                 return .failingOperation
             }
         }
@@ -143,7 +141,7 @@ extension MockBinaryOperator: Codable {
         case .divide:
             return .division
         case .failingOperation:
-            return .justFail
+            return .failingOperation
         }
     }
     
@@ -162,4 +160,5 @@ extension MockBinaryOperator: Codable {
         let base = try container.decode(Base.self, forKey: .base)
         self = base._concrete()
     }
+    
 }

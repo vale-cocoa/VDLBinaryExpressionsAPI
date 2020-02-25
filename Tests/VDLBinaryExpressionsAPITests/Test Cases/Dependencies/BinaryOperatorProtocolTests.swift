@@ -12,7 +12,7 @@ import XCTest
 
 final class BinaryOperatorProtocolTests: XCTestCase {
     // MARK: - Properties
-    var sut: MockBinaryOperator!
+    var sut: MockDummyOperator!
     
     // MARK: - Tests lifecycle
     override func setUp() {
@@ -33,7 +33,7 @@ final class BinaryOperatorProtocolTests: XCTestCase {
     
     func test_binaryOperation() {
         // given
-        for aCase in MockBinaryOperator.allCases {
+        for aCase in MockDummyOperator.allCases {
             // when
             sut = aCase
             // then
@@ -43,7 +43,7 @@ final class BinaryOperatorProtocolTests: XCTestCase {
     
     func test_priority() {
         // given
-        for aCase in MockBinaryOperator.allCases {
+        for aCase in MockDummyOperator.allCases {
             // when
             sut = aCase
             // then
@@ -53,7 +53,7 @@ final class BinaryOperatorProtocolTests: XCTestCase {
     
     func test_associativity() {
         // given
-        for aCase in MockBinaryOperator.allCases {
+        for aCase in MockDummyOperator.allCases {
             // when
             sut = aCase
             // then
@@ -61,14 +61,14 @@ final class BinaryOperatorProtocolTests: XCTestCase {
         }
     }
     
-    func test_hasPrecedenceInPostfixConversionThen_whenOtherAssociativityIsLeft() {
+    func test_goesBeforeInPostfixConversionThan_whenOtherAssociativityIsLeft() {
         // given
-        for aCase in MockBinaryOperator.allCases {
+        for aCase in MockDummyOperator.allCases {
             sut = aCase
             // when
-            let others = MockBinaryOperator.allCases.filter { ($0 != aCase && $0.associativity == .left) }
+            let others = MockDummyOperator.allCases.filter { ($0 != aCase && $0.associativity == .left) }
             for other in others {
-                let result = sut.hasPrecedenceInPostfixConversion(then: other)
+                let result = sut.goesBeforeInPostfixConversion(than: other)
                 // then
                 XCTAssertEqual(result, (other.priority <= sut.priority))
             }
@@ -76,14 +76,14 @@ final class BinaryOperatorProtocolTests: XCTestCase {
         
     }
     
-    func test_hasPrecedenceInPostfixConversionThen_whenOtherAssociativityIsRight() {
+    func test_goesBeforeInPostfixConversionThan_whenOtherAssociativityIsRight() {
         // given
-        for aCase in MockBinaryOperator.allCases {
+        for aCase in MockDummyOperator.allCases {
             sut = aCase
             // when
-            let others = MockBinaryOperator.allCases.filter { ($0 != aCase && $0.associativity == .right) }
+            let others = MockDummyOperator.allCases.filter { ($0 != aCase && $0.associativity == .right) }
             for other in others {
-                let result = sut.hasPrecedenceInPostfixConversion(then: other)
+                let result = sut.goesBeforeInPostfixConversion(than: other)
                 // then
                 XCTAssertEqual(result, (other.priority < sut.priority))
             }
@@ -95,8 +95,8 @@ final class BinaryOperatorProtocolTests: XCTestCase {
         ("test_binaryOperation", test_binaryOperation),
         ("test_priority", test_priority),
         ("test_associativity", test_associativity),
-        ("test_hasPrecedenceInPostfixConversionThen_whenOtherAssociativityIsLeft", test_hasPrecedenceInPostfixConversionThen_whenOtherAssociativityIsLeft),
-        ("test_hasPrecedenceInPostfixConversionThen_whenOtherAssociativityIsRight", test_hasPrecedenceInPostfixConversionThen_whenOtherAssociativityIsRight),
+        ("test_goesBeforeInPostfixConversionThan_whenOtherAssociativityIsLeft", test_goesBeforeInPostfixConversionThan_whenOtherAssociativityIsLeft),
+        ("test_goesBeforeInPostfixConversionThan_whenOtherAssociativityIsRight", test_goesBeforeInPostfixConversionThan_whenOtherAssociativityIsRight),
         
     ]
 }
