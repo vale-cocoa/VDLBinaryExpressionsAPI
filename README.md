@@ -28,7 +28,7 @@ In postfix notation the operators comes after the corresponding operands, theref
 
 This would be postfix represention of the infix expression *A + B * C*, while:
 
-**A B + C \** 
+**A B + C \*** 
 
 would be the postfix representation for the bracketed verision *(A + B) * C*.
 This notation can be easily evaluated by using a stack.
